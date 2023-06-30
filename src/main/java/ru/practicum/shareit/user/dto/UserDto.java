@@ -10,7 +10,7 @@ import lombok.Data;
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public class UserDto {
     @JsonProperty("id")
-    private long id;
+    private Long id;
     @JsonProperty("name")
     private String name;
     @JsonProperty("email")

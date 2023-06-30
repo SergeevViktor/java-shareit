@@ -2,12 +2,13 @@ package ru.practicum.shareit.item;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.service.ItemService;
 
 import javax.validation.Valid;
+import java.net.URI;
 import java.util.List;
 
 /**
@@ -21,37 +22,35 @@ public class ItemController {
     private final ItemService itemService;
 
     @GetMapping
-    @ResponseStatus(HttpStatus.OK)
-    public List<ItemDto> getAllItemsByUserId(@RequestHeader("X-Sharer-User-Id") long userId) {
-        return itemService.getAllItemsByUserId(userId);
+    public ResponseEntity<List<ItemDto>> getAllItemsByUserId(@RequestHeader("X-Sharer-User-Id") long userId) {
+        return ResponseEntity.ok().body(itemService.getAllItemsByUserId(userId));
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public ItemDto addItem(@Valid @RequestBody ItemDto itemDto,
+    public ResponseEntity<ItemDto> addItem(@Valid @RequestBody ItemDto itemDto,
                            @RequestHeader("X-Sharer-User-Id") Long userId) {
         log.info("Добавление вещи.");
-        return itemService.addItem(userId, itemDto);
+        return ResponseEntity.created(URI.create("http://localhost:8080/items"))
+                .body(itemService.addItem(userId, itemDto));
     }
 
     @GetMapping("/{id}")
-    public ItemDto getItemById(@PathVariable long id) {
-        return itemService.getItemById(id);
+    public ResponseEntity<ItemDto> getItemById(@PathVariable long id) {
+        return ResponseEntity.ok().body(itemService.getItemById(id));
     }
 
     @PatchMapping("/{itemId}")
-    @ResponseStatus(HttpStatus.OK)
-    public ItemDto updateItem(@RequestHeader("X-Sharer-User-Id") long userId,
+    public ResponseEntity<ItemDto> updateItem(@RequestHeader("X-Sharer-User-Id") long userId,
                               @PathVariable long itemId,
                               @RequestBody ItemDto itemDto) {
 
         itemDto.setId(itemId);
         log.info("Обновление вещи.");
-        return itemService.updateItem(userId, itemDto);
+        return ResponseEntity.ok().body(itemService.updateItem(userId, itemDto));
     }
 
     @GetMapping("/search")
-    public List<ItemDto> textSearch(@RequestParam(value = "text") String text) {
-        return itemService.textSearch(text);
+    public ResponseEntity<List<ItemDto>> textSearch(@RequestParam(value = "text") String text) {
+        return ResponseEntity.ok().body(itemService.textSearch(text));
     }
 }

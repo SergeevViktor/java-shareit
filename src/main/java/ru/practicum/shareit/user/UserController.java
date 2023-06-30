@@ -3,11 +3,13 @@ package ru.practicum.shareit.user;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.service.UserService;
 
 import javax.validation.Valid;
+import java.net.URI;
 import java.util.List;
 
 /**
@@ -21,30 +23,28 @@ public class UserController {
     private final UserService userService;
 
     @GetMapping
-    @ResponseStatus(HttpStatus.OK)
-    public List<UserDto> getAllUsers() {
-        return userService.getAllUsers();
+    public ResponseEntity<List<UserDto>> getAllUsers() {
+        return ResponseEntity.ok().body(userService.getAllUsers());
     }
 
     @PostMapping
-    @ResponseStatus(HttpStatus.CREATED)
-    public UserDto addUser(@Valid @RequestBody UserDto user) {
+    public ResponseEntity<UserDto> addUser(@Valid @RequestBody UserDto user) {
         log.info("Добавление пользователя.");
-        return userService.addUser(user);
+        return ResponseEntity.created(URI.create("http://localhost:8080/users"))
+                .body(userService.addUser(user));
     }
 
     @PatchMapping("/{userId}")
-    @ResponseStatus(HttpStatus.OK)
-    public UserDto updateUser(@RequestBody UserDto user,
+    public ResponseEntity<UserDto> updateUser(@RequestBody UserDto user,
                               @PathVariable Long userId) {
         log.info("Обновление данных пользователя c id: {}", userId);
         user.setId(userId);
-        return userService.updateUser(user);
+        return ResponseEntity.ok().body(userService.updateUser(user));
     }
 
     @GetMapping("/{id}")
-    public UserDto getUserById(@PathVariable long id) {
-        return userService.getUserById(id);
+    public ResponseEntity<UserDto> getUserById(@PathVariable long id) {
+        return ResponseEntity.ok().body(userService.getUserById(id));
     }
 
     @DeleteMapping("/{userId}")

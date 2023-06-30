@@ -23,17 +23,17 @@ public class UserServiceImpl implements UserService {
 
     @Override
     public UserDto addUser(UserDto userDto) {
-        User user = UserMapper.toUser(userDto);
+        User user = UserMapper.INSTANCE.toUser(userDto);
         validateUser(user);
         if (emailExists(user)) {
             throw new ConflictException("Такого email уже существует.");
         }
-        return UserMapper.toUserDto(userDao.addUser(user));
+        return UserMapper.INSTANCE.toUserDto(userDao.addUser(user));
     }
 
     @Override
     public UserDto updateUser(UserDto userDto) {
-        User newUser = UserMapper.toUser(userDto);
+        User newUser = UserMapper.INSTANCE.toUser(userDto);
         User user = userDao.getUserById(newUser.getId());
 
         if (user == null) {
@@ -50,13 +50,13 @@ public class UserServiceImpl implements UserService {
         if (emailExists(newUser)) {
             throw new ConflictException("Такой email уже существует.");
         }
-        return UserMapper.toUserDto(userDao.updateUser(newUser));
+        return UserMapper.INSTANCE.toUserDto(userDao.updateUser(newUser));
     }
 
     @Override
     public List<UserDto> getAllUsers() {
         return userDao.getAllUsers().stream()
-                .map(UserMapper::toUserDto)
+                .map(UserMapper.INSTANCE::toUserDto)
                 .collect(Collectors.toList());
     }
 
@@ -75,7 +75,7 @@ public class UserServiceImpl implements UserService {
         }
         User user = userDao.getUserById(id);
         validateUser(user);
-        return UserMapper.toUserDto(user);
+        return UserMapper.INSTANCE.toUserDto(user);
     }
 
     private void validateUser(User user) {
