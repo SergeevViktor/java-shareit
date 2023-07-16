@@ -34,9 +34,10 @@ public class ItemController {
                 .body(itemService.addItem(userId, itemDto));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ItemDto> getItemById(@PathVariable long id) {
-        return ResponseEntity.ok().body(itemService.getItemById(id));
+    @GetMapping("/{itemId}")
+    public ResponseEntity<ItemDto> getItemById(@RequestHeader("X-Sharer-User-Id") long userId,
+                                               @PathVariable long itemId) {
+        return ResponseEntity.ok().body(itemService.getItemById(itemId, userId));
     }
 
     @PatchMapping("/{itemId}")
