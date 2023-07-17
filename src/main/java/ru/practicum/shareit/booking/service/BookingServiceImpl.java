@@ -11,6 +11,7 @@ import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.State;
 import ru.practicum.shareit.booking.model.Status;
 import ru.practicum.shareit.exceptions.ObjectNotFoundException;
+import ru.practicum.shareit.exceptions.WrongStatusException;
 import ru.practicum.shareit.item.ItemRepository;
 import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.user.UserRepository;
@@ -108,7 +109,13 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingDto> getItemsBookingsOfUser(long userId, State state) {
+    public List<BookingDto> getItemsBookingsOfUser(long userId, String state) {
+        State stateEnum;
+        try {
+            stateEnum = State.valueOf(state);
+        } catch (Exception ex) {
+            throw new WrongStatusException("Unknown state: UNSUPPORTED_STATUS");
+        }
         var user = userRepository.findById(userId);
         if (user.isEmpty()) {
             throw new ObjectNotFoundException("Пользователь не найден");
@@ -117,7 +124,7 @@ public class BookingServiceImpl implements BookingService {
         var need1 = bookingRepository.findAll();
         List<Booking> bookings = bookingRepository.findByBookerId(userId);
         LocalDateTime time = LocalDateTime.now();
-        switch (state) {
+        switch (stateEnum) {
             case PAST:
                 bookings = bookingRepository.findByBookerIdAndEndsIsBefore(userId, time, sort);
                 break;
@@ -149,7 +156,13 @@ public class BookingServiceImpl implements BookingService {
     }
 
     @Override
-    public List<BookingDto> getBookingByItemOwner(long userId, State state) {
+    public List<BookingDto> getBookingByItemOwner(long userId, String state) {
+        State stateEnum;
+        try {
+            stateEnum = State.valueOf(state);
+        } catch (Exception ex) {
+            throw new WrongStatusException("Unknown state: UNSUPPORTED_STATUS");
+        }
         var need = itemRepository.findAll();
         var need1 = bookingRepository.findAll();
         var need2 = userRepository.findAll();
@@ -159,12 +172,11 @@ public class BookingServiceImpl implements BookingService {
         }
         List<Booking> bookings;
         LocalDateTime time = LocalDateTime.now();
-        switch (state) {
+        switch (stateEnum) {
             case PAST:
                 bookings = bookingRepository.findByItemOwnerIdAndEndsIsBefore(userId, time, sort);
                 break;
             case FUTURE:
-
                 bookings = bookingRepository.findByItemOwnerIdAndStartsIsAfter(userId, time, sort);
                 break;
             case CURRENT:

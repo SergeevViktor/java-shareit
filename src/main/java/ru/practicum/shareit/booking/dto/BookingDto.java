@@ -23,8 +23,8 @@ public class BookingDto {
     private LocalDateTime start;
     private LocalDateTime end;
     private ItemDto item;
-    private long itemId;
+    private Long itemId;
     private UserDto booker;
-    private long bookerId;
+    private Long bookerId;
     private Status status;
 }

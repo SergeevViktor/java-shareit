@@ -2,7 +2,6 @@ package ru.practicum.shareit.item;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.CommentDto;
@@ -14,9 +13,6 @@ import javax.validation.ValidationException;
 import java.net.URI;
 import java.util.List;
 
-/**
- * TODO Sprint add-controllers.
- */
 @RestController
 @RequestMapping("/items")
 @Slf4j
@@ -60,8 +56,7 @@ public class ItemController {
     }
 
     @PostMapping("/{itemId}/comment")
-    @ResponseStatus(HttpStatus.OK)
-    public CommentDto addComment(@RequestHeader("X-Sharer-User-Id") long userId,
+    public ResponseEntity<CommentDto> addComment(@RequestHeader("X-Sharer-User-Id") long userId,
                                  @RequestBody CommentDto commentDto,
                                  @PathVariable long itemId) {
 
@@ -70,6 +65,6 @@ public class ItemController {
             throw new ValidationException("Поле text не может быть пустым!");
         }
         commentDto.setText(text);
-        return itemService.addComment(userId, itemId, commentDto);
+        return ResponseEntity.ok().body(itemService.addComment(userId, itemId, commentDto));
     }
 }

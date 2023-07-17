@@ -27,13 +27,7 @@ public class BookingController {
     @GetMapping
     public ResponseEntity<List<BookingDto>> getBookingsOfUser(@RequestHeader("X-Sharer-User-Id") long userId,
                                                               @RequestParam(defaultValue = "ALL") String state) {
-        State stateEnum;
-        try {
-            stateEnum = State.valueOf(state);
-        } catch (Exception ex) {
-            throw new WrongStatusException("Unknown state: UNSUPPORTED_STATUS");
-        }
-        return ResponseEntity.ok().body(bookingService.getItemsBookingsOfUser(userId, stateEnum));
+        return ResponseEntity.ok().body(bookingService.getItemsBookingsOfUser(userId, state));
     }
 
     @PostMapping
@@ -47,13 +41,7 @@ public class BookingController {
     @GetMapping("/owner")
     public ResponseEntity<List<BookingDto>> getBookingByItemOwner(@RequestHeader("X-Sharer-User-Id") long userId,
                                                                   @RequestParam(defaultValue = "ALL") String state) {
-        State stateEnum;
-        try {
-            stateEnum = State.valueOf(state);
-        } catch (Exception ex) {
-            throw new WrongStatusException("Unknown state: UNSUPPORTED_STATUS");
-        }
-        return ResponseEntity.ok().body(bookingService.getBookingByItemOwner(userId, stateEnum));
+        return ResponseEntity.ok().body(bookingService.getBookingByItemOwner(userId, state));
     }
 
     @GetMapping("/{bookingId}")

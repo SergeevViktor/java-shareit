@@ -38,14 +38,17 @@ public class ItemServiceImpl implements ItemService {
     private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
-    private final UserService userService;
 
     @Override
     public ItemDto addItem(long userId, ItemDto itemDto) {
         validateItemDto(itemDto, false);
         Item item = ItemMapper.INSTANCE.toItem(itemDto);
-        UserDto user = userService.getUserById(userId);
-        item.setOwner(UserMapper.INSTANCE.toUser(user));
+        var userOptional = userRepository.findById(userId);
+        if (userOptional.isEmpty()) {
+            throw new ObjectNotFoundException("Такого пользователя не существует.");
+        }
+        var user = userOptional.get();
+        item.setOwner(user);
         return ItemMapper.INSTANCE.toItemDto(itemRepository.save(item));
     }
 
