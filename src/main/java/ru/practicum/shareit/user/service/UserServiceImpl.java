@@ -3,7 +3,6 @@ package ru.practicum.shareit.user.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.exceptions.ConflictException;
 import ru.practicum.shareit.exceptions.ObjectNotFoundException;
 import ru.practicum.shareit.user.UserRepository;
 import ru.practicum.shareit.user.dto.UserDto;
@@ -37,12 +36,13 @@ public class UserServiceImpl implements UserService {
             throw new ValidationException("Такой пользователь не существует!");
         }
         if (newUser.getEmail() != null) {
-            newUser.setEmail(user.getEmail());
+            user.setEmail(newUser.getEmail());
         }
         if (newUser.getName() != null) {
-            newUser.setName(user.getName());
+            user.setName(newUser.getName());
         }
-        validateUser(newUser);
+        validateUser(user);
+        log.info("Данные пользователя обновлены: {}", user.getName());
         return UserMapper.INSTANCE.toUserDto(userRepository.save(user));
     }
 

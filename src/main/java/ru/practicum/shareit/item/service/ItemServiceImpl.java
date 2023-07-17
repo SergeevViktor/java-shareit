@@ -38,7 +38,6 @@ public class ItemServiceImpl implements ItemService {
     private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
-
     private final UserService userService;
 
     @Override
@@ -53,30 +52,33 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemDto updateItem(long userId, ItemDto itemDto) {
         Item item = ItemMapper.INSTANCE.toItem(itemDto);
+        var changeItem1 = itemRepository.findAll();
         var changeItem = itemRepository.findById(itemDto.getId());
-        if (changeItem.isEmpty()) {
+        var currentItem = changeItem.get();
+
+        if (currentItem == null) {
             throw new ObjectNotFoundException("Такой вещи не существует!");
         }
-        var currentItem = changeItem.get();
         if (userId != currentItem.getOwner().getId()) {
-            throw new ObjectNotFoundException("Id пользователя не совпадает с id владельца.");
+            throw new ObjectNotFoundException("id вещи пользователя не совпадают с id владелььца вещи");
         }
         item.setOwner(currentItem.getOwner());
-        if (itemDto.getName() == null) {
-            item.setName(currentItem.getName());
+        if (itemDto.getName() != null) {
+            currentItem.setName(item.getName());
         }
-        if (itemDto.getDescription() == null) {
-            item.setDescription(currentItem.getDescription());
+        if (itemDto.getDescription() != null) {
+            currentItem.setDescription(item.getDescription());
         }
-        if (itemDto.getAvailable() == null) {
-            item.setAvailable(currentItem.isAvailable());
+        if (itemDto.getAvailable() != null) {
+            currentItem.setAvailable(item.isAvailable());
         }
         validateItemDto(itemDto, true);
-        return ItemMapper.INSTANCE.toItemDto(itemRepository.save(item));
+        return ItemMapper.INSTANCE.toItemDto(itemRepository.save(currentItem));
     }
 
     @Override
     public ItemDto getItemById(long itemId, long userId) {
+        var changeItem1 = itemRepository.findAll();
         var item = itemRepository.findById(itemId).orElseThrow(() ->
                 new ObjectNotFoundException("Вещь не найдена!"));
         List<Comment> comments = commentRepository.findCommentsByItem_Id(itemId);
@@ -163,7 +165,8 @@ public class ItemServiceImpl implements ItemService {
         if (text.isBlank()) {
             return itemsDto;
         }
-        for (Item item : itemRepository.search(text)) {
+        List<Item> items = itemRepository.search(text);
+        for (Item item : items) {
             itemsDto.add(ItemMapper.INSTANCE.toItemDto(item));
         }
         return itemsDto;
@@ -171,6 +174,8 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public CommentDto addComment(long userId, long itemId, CommentDto commentDto) {
+        var need = itemRepository.findAll();
+        var need1 = bookingRepository.findAll();
         var itemOptional = itemRepository.findById(itemId);
 
         if (itemOptional.isEmpty()) {
