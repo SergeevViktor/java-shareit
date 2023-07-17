@@ -1,20 +1,10 @@
 package ru.practicum.shareit.booking.dto;
 
 import lombok.experimental.UtilityClass;
-import org.mapstruct.Mapper;
-import org.mapstruct.factory.Mappers;
 import ru.practicum.shareit.booking.model.Booking;
 
-//@Mapper
 @UtilityClass
 public class BookingMapper {
-    //BookingMapper INSTANCE = Mappers.getMapper(BookingMapper.class);
-
-    //Booking toBooking(BookingDto bookingDto);
-
-    //BookingDto toBookingDto(Booking booking);
-
-    //BookingResponseDto toBookingResponseDto(Booking booking);
 
     public static BookingDto toBookingDto(Booking booking) {
         return BookingDto.builder()
