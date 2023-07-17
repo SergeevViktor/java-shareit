@@ -39,7 +39,7 @@ public class BookingController {
 
     @PostMapping
     public ResponseEntity<BookingDto> addBookingRequest(@Valid @RequestBody BookingDto bookingDto,
-                                        @RequestHeader("X-Sharer-User-Id") Long userId) {
+                                                        @RequestHeader("X-Sharer-User-Id") Long userId) {
         log.info("Добавлен новый запрос: {}", bookingDto);
         return ResponseEntity.created(URI.create("http://localhost:8080/bookings"))
                 .body(bookingService.addBooking(userId, bookingDto));
@@ -47,11 +47,10 @@ public class BookingController {
 
     @GetMapping("/owner")
     public ResponseEntity<List<BookingDto>> getBookingByItemOwner(@RequestHeader("X-Sharer-User-Id") long userId,
-                                                  @RequestParam(defaultValue = "ALL") String state) {
+                                                                  @RequestParam(defaultValue = "ALL") String state) {
         State stateEnum;
         try {
             stateEnum = State.valueOf(state);
-
         } catch (Exception ex) {
             throw new WrongStatusException("Unknown state: UNSUPPORTED_STATUS");
         }
@@ -60,15 +59,15 @@ public class BookingController {
 
     @GetMapping("/{bookingId}")
     public ResponseEntity<BookingDto> getBooking(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                 @PathVariable long bookingId) {
+                                                 @PathVariable long bookingId) {
 
         return ResponseEntity.ok().body(bookingService.getBooking(userId, bookingId));
     }
 
     @PatchMapping("/{bookingId}")
     public ResponseEntity<BookingDto> approvedBooking(@RequestHeader("X-Sharer-User-Id") Long userId,
-                                      @PathVariable long bookingId,
-                                      @RequestParam(name = "approved") boolean available) {
+                                                      @PathVariable long bookingId,
+                                                      @RequestParam(name = "approved") boolean available) {
         log.info("Отправлен запрос на изменение статуса бронирования от владельца c id: {}", userId);
         var result = bookingService.approved(userId, bookingId, available);
         return ResponseEntity.ok().body(result);

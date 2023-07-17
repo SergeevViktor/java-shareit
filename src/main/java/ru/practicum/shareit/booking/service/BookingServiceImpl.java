@@ -19,6 +19,7 @@ import ru.practicum.shareit.user.dto.UserMapper;
 import javax.validation.ValidationException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 
 @Service
@@ -33,7 +34,7 @@ public class BookingServiceImpl implements BookingService{
     @Override
     public BookingDto addBooking(long userId, BookingDto bookingDto) {
         validateTimeBooking(bookingDto);
-        var booking = BookingMapper.INSTANCE.toBooking(bookingDto);
+        var booking = BookingMapper.toBooking(bookingDto);
         var userOptional = userRepository.findById(userId);
         if (userOptional.isEmpty()) {
             throw new ObjectNotFoundException("Пользователь не найден");
@@ -49,14 +50,14 @@ public class BookingServiceImpl implements BookingService{
             throw new ValidationException("Данная вещь не доступна для бронирования!");
         }
         if (item.getOwner().getId() == userId) {
-            throw new ObjectNotFoundException("Вещь ваша - это не имеет смысла!");
+            throw new ObjectNotFoundException("Зачем самому себе брать вещь в аренду! :)");
         }
         booking.setBooker(user);
         booking.setItem(item);
         booking.setStatus(Status.WAITING);
-        log.info("Добавлен новый запрос от пользователя; {}", booking.getBooker().getName());
+        log.info("Добавлна новый запрос от пользователя; {}", booking.getBooker().getName());
         var bookingTemp = bookingRepository.save(booking);
-        var result = BookingMapper.INSTANCE.toBookingDto(bookingTemp);
+        var result = BookingMapper.toBookingDto(bookingTemp);
         result.setItem(ItemMapper.INSTANCE.toItemDto(item));
         result.setBooker(UserMapper.INSTANCE.toUserDto(user));
         return result;
@@ -71,7 +72,7 @@ public class BookingServiceImpl implements BookingService{
             throw new ObjectNotFoundException("Такого бронирования не существует!");
         }
         if (booking.get().getItem().getOwner().getId() != (userId)) {
-            throw new ObjectNotFoundException("Id вещи пользователя не совпадают с id владелььца вещи");
+            throw new ObjectNotFoundException("id вещи пользователя не совпадают с id владелььца вещи");
         }
         Status status = booking.get().getStatus();
         if (!status.equals(Status.WAITING)) {
@@ -82,7 +83,7 @@ public class BookingServiceImpl implements BookingService{
         } else {
             booking.get().setStatus(Status.REJECTED);
         }
-        var result = BookingMapper.INSTANCE.toBookingDto(bookingRepository.save(booking.get()));
+        var result = BookingMapper.toBookingDto(bookingRepository.save(booking.get()));
         result.setItem(ItemMapper.INSTANCE.toItemDto(booking.get().getItem()));
         result.setBooker(UserMapper.INSTANCE.toUserDto(booking.get().getBooker()));
         return result;
@@ -100,7 +101,7 @@ public class BookingServiceImpl implements BookingService{
                 booking.get().getItem().getOwner().getId() != (userId)) {
             throw new ObjectNotFoundException("Данные бронирования открыты автору бронирования или владельцу вещи!");
         }
-        var result = BookingMapper.INSTANCE.toBookingDto(bookingRepository.findById(bookingId).get());
+        var result = BookingMapper.toBookingDto(bookingRepository.findById(bookingId).get());
         result.setItem(ItemMapper.INSTANCE.toItemDto(booking.get().getItem()));
         result.setBooker(UserMapper.INSTANCE.toUserDto(booking.get().getBooker()));
         return result;
@@ -134,12 +135,12 @@ public class BookingServiceImpl implements BookingService{
                 bookings = bookingRepository.findByBookerIdAndStatus(userId, Status.REJECTED, sort);
                 break;
             default:
-                bookings.sort((booking1, booking2) -> booking2.getStarts().compareTo(booking1.getStarts()));
+                Collections.sort(bookings, (booking1, booking2) -> booking2.getStarts().compareTo(booking1.getStarts()));
                 break;
         }
         List<BookingDto> result = new ArrayList<>();
         for (Booking booking : bookings) {
-            var bookingDto = BookingMapper.INSTANCE.toBookingDto(booking);
+            var bookingDto = BookingMapper.toBookingDto(booking);
             bookingDto.setItem(ItemMapper.INSTANCE.toItemDto(booking.getItem()));
             bookingDto.setBooker(UserMapper.INSTANCE.toUserDto(booking.getBooker()));
             result.add(bookingDto);
@@ -156,13 +157,14 @@ public class BookingServiceImpl implements BookingService{
         if (user.isEmpty()) {
             throw new ObjectNotFoundException("Пользователь не найден");
         }
-        List<Booking> bookings = bookingRepository.findByItemOwnerIdOrderByStartsDesc(userId);
+        List<Booking> bookings;
         LocalDateTime time = LocalDateTime.now();
         switch (state) {
             case PAST:
                 bookings = bookingRepository.findByItemOwnerIdAndEndsIsBefore(userId, time, sort);
                 break;
             case FUTURE:
+
                 bookings = bookingRepository.findByItemOwnerIdAndStartsIsAfter(userId, time, sort);
                 break;
             case CURRENT:
@@ -175,10 +177,13 @@ public class BookingServiceImpl implements BookingService{
             case REJECTED:
                 bookings = bookingRepository.findByItemOwnerIdAndStatus(userId, Status.REJECTED, sort);
                 break;
+            default:
+                bookings = bookingRepository.findByItemOwnerIdOrderByStartsDesc(userId);
+                break;
         }
         List<BookingDto> result = new ArrayList<>();
         for (Booking booking : bookings) {
-            var bookingDto = BookingMapper.INSTANCE.toBookingDto(booking);
+            var bookingDto = BookingMapper.toBookingDto(booking);
             bookingDto.setItem(ItemMapper.INSTANCE.toItemDto(booking.getItem()));
             bookingDto.setBooker(UserMapper.INSTANCE.toUserDto(booking.getBooker()));
             result.add(bookingDto);
