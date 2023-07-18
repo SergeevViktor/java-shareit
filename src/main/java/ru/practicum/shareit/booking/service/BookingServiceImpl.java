@@ -35,7 +35,7 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public BookingDto addBooking(long userId, BookingDto bookingDto) {
         validateTimeBooking(bookingDto);
-        var booking = BookingMapper.toBooking(bookingDto);
+        var booking = BookingMapper.INSTANCE.toBooking(bookingDto);
         var userOptional = userRepository.findById(userId);
         if (userOptional.isEmpty()) {
             throw new ObjectNotFoundException("Пользователь не найден");
@@ -58,7 +58,7 @@ public class BookingServiceImpl implements BookingService {
         booking.setStatus(Status.WAITING);
         log.info("Добавлна новый запрос от пользователя; {}", booking.getBooker().getName());
         var bookingTemp = bookingRepository.save(booking);
-        var result = BookingMapper.toBookingDto(bookingTemp);
+        var result = BookingMapper.INSTANCE.toBookingDto(bookingTemp);
         result.setItem(ItemMapper.INSTANCE.toItemDto(item));
         result.setBooker(UserMapper.INSTANCE.toUserDto(user));
         return result;
@@ -84,7 +84,7 @@ public class BookingServiceImpl implements BookingService {
         } else {
             booking.get().setStatus(Status.REJECTED);
         }
-        var result = BookingMapper.toBookingDto(bookingRepository.save(booking.get()));
+        var result = BookingMapper.INSTANCE.toBookingDto(bookingRepository.save(booking.get()));
         result.setItem(ItemMapper.INSTANCE.toItemDto(booking.get().getItem()));
         result.setBooker(UserMapper.INSTANCE.toUserDto(booking.get().getBooker()));
         return result;
@@ -102,7 +102,7 @@ public class BookingServiceImpl implements BookingService {
                 booking.get().getItem().getOwner().getId() != (userId)) {
             throw new ObjectNotFoundException("Данные бронирования открыты автору бронирования или владельцу вещи!");
         }
-        var result = BookingMapper.toBookingDto(bookingRepository.findById(bookingId).get());
+        var result = BookingMapper.INSTANCE.toBookingDto(bookingRepository.findById(bookingId).get());
         result.setItem(ItemMapper.INSTANCE.toItemDto(booking.get().getItem()));
         result.setBooker(UserMapper.INSTANCE.toUserDto(booking.get().getBooker()));
         return result;
@@ -147,7 +147,7 @@ public class BookingServiceImpl implements BookingService {
         }
         List<BookingDto> result = new ArrayList<>();
         for (Booking booking : bookings) {
-            var bookingDto = BookingMapper.toBookingDto(booking);
+            var bookingDto = BookingMapper.INSTANCE.toBookingDto(booking);
             bookingDto.setItem(ItemMapper.INSTANCE.toItemDto(booking.getItem()));
             bookingDto.setBooker(UserMapper.INSTANCE.toUserDto(booking.getBooker()));
             result.add(bookingDto);
@@ -195,7 +195,7 @@ public class BookingServiceImpl implements BookingService {
         }
         List<BookingDto> result = new ArrayList<>();
         for (Booking booking : bookings) {
-            var bookingDto = BookingMapper.toBookingDto(booking);
+            var bookingDto = BookingMapper.INSTANCE.toBookingDto(booking);
             bookingDto.setItem(ItemMapper.INSTANCE.toItemDto(booking.getItem()));
             bookingDto.setBooker(UserMapper.INSTANCE.toUserDto(booking.getBooker()));
             result.add(bookingDto);

@@ -1,28 +1,21 @@
 package ru.practicum.shareit.booking.dto;
 
-import lombok.experimental.UtilityClass;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.factory.Mappers;
 import ru.practicum.shareit.booking.model.Booking;
 
-@UtilityClass
-public class BookingMapper {
+@Mapper
+public interface BookingMapper {
+    BookingMapper INSTANCE = Mappers.getMapper(BookingMapper.class);
 
-    public static BookingDto toBookingDto(Booking booking) {
-        return BookingDto.builder()
-                .id(booking.getId())
-                .start(booking.getStarts())
-                .end(booking.getEnds())
-                .status(booking.getStatus())
-                .itemId(booking.getItem().getId())
-                .bookerId(booking.getBooker().getId())
-                .build();
-    }
+    @Mapping(target = "start", source = "booking.starts")
+    @Mapping(target = "end", source = "booking.ends")
+    @Mapping(target = "itemId", source = "booking.item.id")
+    @Mapping(target = "bookerId", source = "booking.booker.id")
+    BookingDto toBookingDto(Booking booking);
 
-    public static Booking toBooking(BookingDto bookingDto) {
-        return Booking.builder()
-                .id(bookingDto.getId())
-                .starts(bookingDto.getStart())
-                .ends(bookingDto.getEnd())
-                .status(bookingDto.getStatus())
-                .build();
-    }
+    @Mapping(target = "starts", source = "bookingDto.start")
+    @Mapping(target = "ends", source = "bookingDto.end")
+    Booking toBooking(BookingDto bookingDto);
 }

@@ -88,7 +88,7 @@ public class ItemServiceImpl implements ItemService {
         var itemDto = ItemMapper.INSTANCE.toItemDto(item);
         List<CommentDto> commentsDto = new ArrayList<>();
         for (Comment comment : comments) {
-            commentsDto.add(CommentMapper.toCommentDto(comment));
+            commentsDto.add(CommentMapper.INSTANCE.toCommentDto(comment));
         }
         itemDto.setComments(commentsDto);
 
@@ -100,7 +100,7 @@ public class ItemServiceImpl implements ItemService {
                         .collect(Collectors.toList());
                 for (Booking booking : bookings) {
                     if (booking.getStarts().isBefore(LocalDateTime.now())) {
-                        itemDto.setLastBooking(BookingMapper.toBookingDto(booking));
+                        itemDto.setLastBooking(BookingMapper.INSTANCE.toBookingDto(booking));
                         break;
                     }
                 }
@@ -109,7 +109,7 @@ public class ItemServiceImpl implements ItemService {
                         .collect(Collectors.toList());
                 for (Booking booking : bookings) {
                     if (booking.getStarts().isAfter(LocalDateTime.now())) {
-                        itemDto.setNextBooking(BookingMapper.toBookingDto(booking));
+                        itemDto.setNextBooking(BookingMapper.INSTANCE.toBookingDto(booking));
                         break;
                     }
                 }
@@ -136,7 +136,7 @@ public class ItemServiceImpl implements ItemService {
                             .collect(Collectors.toList());
                     for (Booking booking : bookings) {
                         if (booking.getStarts().isBefore(LocalDateTime.now())) {
-                            itemDto.setLastBooking(BookingMapper.toBookingDto(booking));
+                            itemDto.setLastBooking(BookingMapper.INSTANCE.toBookingDto(booking));
                             break;
                         }
                     }
@@ -145,7 +145,7 @@ public class ItemServiceImpl implements ItemService {
                             .collect(Collectors.toList());
                     for (Booking booking : bookings) {
                         if (booking.getStarts().isAfter(LocalDateTime.now())) {
-                            itemDto.setNextBooking(BookingMapper.toBookingDto(booking));
+                            itemDto.setNextBooking(BookingMapper.INSTANCE.toBookingDto(booking));
                             break;
                         }
                     }
@@ -154,7 +154,7 @@ public class ItemServiceImpl implements ItemService {
             List<Comment> comments = commentRepository.findCommentsByItemId(item.getId());
             List<CommentDto> commentsDto = new ArrayList<>();
             for (Comment comment : comments) {
-                commentsDto.add(CommentMapper.toCommentDto(comment));
+                commentsDto.add(CommentMapper.INSTANCE.toCommentDto(comment));
             }
             itemDto.setComments(commentsDto);
             itemsDto.add(itemDto);
@@ -204,11 +204,11 @@ public class ItemServiceImpl implements ItemService {
         if (!isExist) {
             throw new ValidationException("Этой вещью не пользовался данный пользователь.");
         }
-        Comment comment = CommentMapper.toComment(commentDto);
+        Comment comment = CommentMapper.INSTANCE.toComment(commentDto);
         comment.setAuthor(user);
         comment.setItem(item);
         comment.setCreated(LocalDateTime.now());
-        return CommentMapper.toCommentDto(commentRepository.save(comment));
+        return CommentMapper.INSTANCE.toCommentDto(commentRepository.save(comment));
     }
 
     private void validateItemDto(ItemDto itemDto, boolean isUpdate) {
