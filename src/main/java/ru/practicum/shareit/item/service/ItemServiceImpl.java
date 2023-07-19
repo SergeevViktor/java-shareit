@@ -3,76 +3,158 @@ package ru.practicum.shareit.item.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
+import ru.practicum.shareit.booking.BookingRepository;
+import ru.practicum.shareit.booking.dto.BookingMapper;
+import ru.practicum.shareit.booking.model.Booking;
+import ru.practicum.shareit.booking.model.Status;
 import ru.practicum.shareit.exceptions.ObjectNotFoundException;
-import ru.practicum.shareit.item.dao.ItemDao;
+import ru.practicum.shareit.item.CommentRepository;
+import ru.practicum.shareit.item.ItemRepository;
+import ru.practicum.shareit.item.dto.CommentDto;
+import ru.practicum.shareit.item.dto.CommentMapper;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemMapper;
+import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
-import ru.practicum.shareit.user.dao.UserDao;
-import ru.practicum.shareit.user.dto.UserDto;
-import ru.practicum.shareit.user.dto.UserMapper;
-import ru.practicum.shareit.user.model.User;
+import ru.practicum.shareit.user.UserRepository;
 
+import javax.transaction.Transactional;
 import javax.validation.ValidationException;
+import java.time.LocalDateTime;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
-import java.util.Objects;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
 @RequiredArgsConstructor
+@Transactional
 public class ItemServiceImpl implements ItemService {
-    private final ItemDao itemDao;
-    private final UserDao userDao;
+    private final ItemRepository itemRepository;
+    private final UserRepository userRepository;
+    private final BookingRepository bookingRepository;
+    private final CommentRepository commentRepository;
 
     @Override
     public ItemDto addItem(long userId, ItemDto itemDto) {
         validateItemDto(itemDto, false);
         Item item = ItemMapper.INSTANCE.toItem(itemDto);
-        if (!userExists(userId)) {
-            throw new ObjectNotFoundException("Пользователя не существует!");
+        var userOptional = userRepository.findById(userId);
+        if (userOptional.isEmpty()) {
+            throw new ObjectNotFoundException("Такого пользователя не существует.");
         }
-        UserDto user = UserMapper.INSTANCE.toUserDto(userDao.getUserById(userId));
-        item.setOwner(UserMapper.INSTANCE.toUser(user));
-        return ItemMapper.INSTANCE.toItemDto(itemDao.addItem(item));
+        var user = userOptional.get();
+        item.setOwner(user);
+        return ItemMapper.INSTANCE.toItemDto(itemRepository.save(item));
     }
 
     @Override
     public ItemDto updateItem(long userId, ItemDto itemDto) {
         Item item = ItemMapper.INSTANCE.toItem(itemDto);
-        Item currentItem = itemDao.getItemById(itemDto.getId());
+        var changeItem1 = itemRepository.findAll();
+        var changeItem = itemRepository.findById(itemDto.getId());
+        var currentItem = changeItem.get();
+
         if (currentItem == null) {
             throw new ObjectNotFoundException("Такой вещи не существует!");
         }
         if (userId != currentItem.getOwner().getId()) {
-            throw new ObjectNotFoundException("Id пользователя не совпадает с id владельца.");
+            throw new ObjectNotFoundException("id вещи пользователя не совпадают с id владелььца вещи");
         }
-
         item.setOwner(currentItem.getOwner());
-        if (itemDto.getName() == null) {
-            item.setName(currentItem.getName());
+        if (itemDto.getName() != null) {
+            currentItem.setName(item.getName());
         }
-        if (itemDto.getDescription() == null) {
-            item.setDescription(currentItem.getDescription());
+        if (itemDto.getDescription() != null) {
+            currentItem.setDescription(item.getDescription());
         }
-        if (itemDto.getAvailable() == null) {
-            item.setAvailable(currentItem.isAvailable());
+        if (itemDto.getAvailable() != null) {
+            currentItem.setAvailable(item.isAvailable());
         }
-
         validateItemDto(itemDto, true);
-        return ItemMapper.INSTANCE.toItemDto(itemDao.updateItem(item));
+        return ItemMapper.INSTANCE.toItemDto(itemRepository.save(currentItem));
     }
 
     @Override
-    public ItemDto getItemById(long id) {
-        return ItemMapper.INSTANCE.toItemDto(itemDao.getItemById(id));
+    public ItemDto getItemById(long itemId, long userId) {
+        var changeItem1 = itemRepository.findAll();
+        var item = itemRepository.findById(itemId).orElseThrow(() ->
+                new ObjectNotFoundException("Вещь не найдена!"));
+        List<Comment> comments = commentRepository.findCommentsByItemId(itemId);
+        var itemDto = ItemMapper.INSTANCE.toItemDto(item);
+        List<CommentDto> commentsDto = new ArrayList<>();
+        for (Comment comment : comments) {
+            commentsDto.add(CommentMapper.INSTANCE.toCommentDto(comment));
+        }
+        itemDto.setComments(commentsDto);
+
+        if (userId == item.getOwner().getId()) {
+            var bookings = bookingRepository.findBookingByItemIdAndStatus(item.getId(), Status.APPROVED);
+            if (bookings.size() != 0) {
+                bookings = bookings.stream()
+                        .sorted(Comparator.comparing(Booking::getStarts).reversed())
+                        .collect(Collectors.toList());
+                for (Booking booking : bookings) {
+                    if (booking.getStarts().isBefore(LocalDateTime.now())) {
+                        itemDto.setLastBooking(BookingMapper.INSTANCE.toBookingDto(booking));
+                        break;
+                    }
+                }
+                bookings = bookings.stream()
+                        .sorted(Comparator.comparing(Booking::getStarts))
+                        .collect(Collectors.toList());
+                for (Booking booking : bookings) {
+                    if (booking.getStarts().isAfter(LocalDateTime.now())) {
+                        itemDto.setNextBooking(BookingMapper.INSTANCE.toBookingDto(booking));
+                        break;
+                    }
+                }
+            }
+        }
+        return itemDto;
     }
 
     @Override
     public List<ItemDto> getAllItemsByUserId(long userId) {
         List<ItemDto> itemsDto = new ArrayList<>();
-        for (Item item : itemDao.getAllItemsByUserId(userId)) {
-            itemsDto.add(ItemMapper.INSTANCE.toItemDto(item));
+        List<Item> items = itemRepository.findItemByOwnerId(userId).stream()
+                .sorted(Comparator.comparingLong(Item::getId))
+                .collect(Collectors.toList());;
+
+        for (Item item : items) {
+            var itemDto = ItemMapper.INSTANCE.toItemDto(item);
+            if (userId == item.getOwner().getId()) {
+                var bookings = bookingRepository.findBookingByItemIdAndStatus(item.getId(), Status.APPROVED);
+
+                if (bookings.size() > 0) {
+                    bookings = bookings.stream()
+                            .sorted(Comparator.comparing(Booking::getStarts).reversed())
+                            .collect(Collectors.toList());
+                    for (Booking booking : bookings) {
+                        if (booking.getStarts().isBefore(LocalDateTime.now())) {
+                            itemDto.setLastBooking(BookingMapper.INSTANCE.toBookingDto(booking));
+                            break;
+                        }
+                    }
+                    bookings = bookings.stream()
+                            .sorted(Comparator.comparing(Booking::getStarts))
+                            .collect(Collectors.toList());
+                    for (Booking booking : bookings) {
+                        if (booking.getStarts().isAfter(LocalDateTime.now())) {
+                            itemDto.setNextBooking(BookingMapper.INSTANCE.toBookingDto(booking));
+                            break;
+                        }
+                    }
+                }
+            }
+            List<Comment> comments = commentRepository.findCommentsByItemId(item.getId());
+            List<CommentDto> commentsDto = new ArrayList<>();
+            for (Comment comment : comments) {
+                commentsDto.add(CommentMapper.INSTANCE.toCommentDto(comment));
+            }
+            itemDto.setComments(commentsDto);
+            itemsDto.add(itemDto);
         }
         return itemsDto;
     }
@@ -83,10 +165,47 @@ public class ItemServiceImpl implements ItemService {
         if (text.isBlank()) {
             return itemsDto;
         }
-        for (Item item : itemDao.textSearch(text)) {
-            itemsDto.add(ItemMapper.INSTANCE.toItemDto(item));
+        List<Item> items = itemRepository.search(text);
+        for (Item item : items) {
+            if (item.isAvailable()) {
+                itemsDto.add(ItemMapper.INSTANCE.toItemDto(item));
+            }
         }
         return itemsDto;
+    }
+
+    @Override
+    public CommentDto addComment(long userId, long itemId, CommentDto commentDto) {
+        var need = itemRepository.findAll();
+        var need1 = bookingRepository.findAll();
+        var itemOptional = itemRepository.findById(itemId);
+        if (itemOptional.isEmpty()) {
+            throw new ObjectNotFoundException("Такой вещи нет.");
+        }
+        var item = itemOptional.get();
+        var userOptional = userRepository.findById(userId);
+        if (userOptional.isEmpty()) {
+            throw new ObjectNotFoundException("Такого пользователя не существует.");
+        }
+        var user = userOptional.get();
+        List<Booking> bookings = bookingRepository.findBookingByItemId(itemId);
+        boolean isExist = false;
+        for (Booking booking : bookings) {
+            if (booking.getBooker().getId() == userId
+                    && booking.getStarts().isBefore(LocalDateTime.now())
+                    && booking.getStatus().equals(Status.APPROVED)) {
+                isExist = true;
+                break;
+            }
+        }
+        if (!isExist) {
+            throw new ValidationException("Этой вещью не пользовался данный пользователь.");
+        }
+        Comment comment = CommentMapper.INSTANCE.toComment(commentDto);
+        comment.setAuthor(user);
+        comment.setItem(item);
+        comment.setCreated(LocalDateTime.now());
+        return CommentMapper.INSTANCE.toCommentDto(commentRepository.save(comment));
     }
 
     private void validateItemDto(ItemDto itemDto, boolean isUpdate) {
@@ -103,16 +222,5 @@ public class ItemServiceImpl implements ItemService {
         if (!isUpdate && itemDto.getAvailable() == null) {
             throw new ValidationException("Отсуствует поле Accessible");
         }
-    }
-
-    private boolean userExists(long userId) {
-        boolean isExist = false;
-        for (User user : userDao.getAllUsers()) {
-            if (Objects.equals(user.getId(), userId)) {
-                isExist = true;
-                break;
-            }
-        }
-        return isExist;
     }
 }

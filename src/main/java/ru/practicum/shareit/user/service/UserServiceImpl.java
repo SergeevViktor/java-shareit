@@ -3,13 +3,13 @@ package ru.practicum.shareit.user.service;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
-import ru.practicum.shareit.exceptions.ConflictException;
 import ru.practicum.shareit.exceptions.ObjectNotFoundException;
-import ru.practicum.shareit.user.dao.UserDao;
+import ru.practicum.shareit.user.UserRepository;
 import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.dto.UserMapper;
 import ru.practicum.shareit.user.model.User;
 
+import javax.transaction.Transactional;
 import javax.validation.ValidationException;
 import java.util.List;
 import java.util.Objects;
@@ -19,43 +19,37 @@ import java.util.stream.Collectors;
 @Slf4j
 @RequiredArgsConstructor
 public class UserServiceImpl implements UserService {
-    private final UserDao userDao;
+    private final UserRepository userRepository;
 
     @Override
     public UserDto addUser(UserDto userDto) {
         User user = UserMapper.INSTANCE.toUser(userDto);
         validateUser(user);
-        if (emailExists(user)) {
-            throw new ConflictException("Такого email уже существует.");
-        }
-        return UserMapper.INSTANCE.toUserDto(userDao.addUser(user));
+        return UserMapper.INSTANCE.toUserDto(userRepository.save(user));
     }
 
     @Override
     public UserDto updateUser(UserDto userDto) {
         User newUser = UserMapper.INSTANCE.toUser(userDto);
-        User user = userDao.getUserById(newUser.getId());
-
+        var user = userRepository.findById(newUser.getId()).get();
         if (user == null) {
             throw new ValidationException("Такой пользователь не существует!");
         }
-        if (newUser.getEmail() == null) {
-            newUser.setEmail(user.getEmail());
+        if (newUser.getEmail() != null) {
+            user.setEmail(newUser.getEmail());
         }
-        if (newUser.getName() == null) {
-            newUser.setName(user.getName());
+        if (newUser.getName() != null) {
+            user.setName(newUser.getName());
         }
-
-        validateUser(newUser);
-        if (emailExists(newUser)) {
-            throw new ConflictException("Такой email уже существует.");
-        }
-        return UserMapper.INSTANCE.toUserDto(userDao.updateUser(newUser));
+        validateUser(user);
+        log.info("Данные пользователя обновлены: {}", user.getName());
+        return UserMapper.INSTANCE.toUserDto(userRepository.save(user));
     }
 
+    @Transactional
     @Override
     public List<UserDto> getAllUsers() {
-        return userDao.getAllUsers().stream()
+        return userRepository.findAll().stream()
                 .map(UserMapper.INSTANCE::toUserDto)
                 .collect(Collectors.toList());
     }
@@ -65,7 +59,7 @@ public class UserServiceImpl implements UserService {
         if (!userExists(id)) {
             throw new ObjectNotFoundException("Пользователя не существует!");
         }
-        userDao.deleteUser(id);
+        userRepository.deleteById(id);
     }
 
     @Override
@@ -73,7 +67,7 @@ public class UserServiceImpl implements UserService {
         if (!userExists(id)) {
             throw new ObjectNotFoundException("Пользователя не существует!");
         }
-        User user = userDao.getUserById(id);
+        User user = userRepository.findById(id).get();
         validateUser(user);
         return UserMapper.INSTANCE.toUserDto(user);
     }
@@ -92,7 +86,7 @@ public class UserServiceImpl implements UserService {
 
     private boolean userExists(long userId) {
         boolean isExist = false;
-        for (User user : userDao.getAllUsers()) {
+        for (User user : userRepository.findAll()) {
             if (Objects.equals(user.getId(), userId)) {
                 isExist = true;
                 break;
@@ -102,7 +96,7 @@ public class UserServiceImpl implements UserService {
     }
 
     private boolean emailExists(User user) {
-        for (User user1 : userDao.getAllUsers()) {
+        for (User user1 : userRepository.findAll()) {
             if (user1.getEmail().contains(user.getEmail())) {
                 if (!Objects.equals(user1.getId(), user.getId())) {
                     log.info("Пользователь с такой почтой уже существует!");

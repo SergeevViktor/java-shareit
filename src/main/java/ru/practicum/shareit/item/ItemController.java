@@ -4,16 +4,15 @@ import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.service.ItemService;
 
 import javax.validation.Valid;
+import javax.validation.ValidationException;
 import java.net.URI;
 import java.util.List;
 
-/**
- * TODO Sprint add-controllers.
- */
 @RestController
 @RequestMapping("/items")
 @Slf4j
@@ -34,9 +33,10 @@ public class ItemController {
                 .body(itemService.addItem(userId, itemDto));
     }
 
-    @GetMapping("/{id}")
-    public ResponseEntity<ItemDto> getItemById(@PathVariable long id) {
-        return ResponseEntity.ok().body(itemService.getItemById(id));
+    @GetMapping("/{itemId}")
+    public ResponseEntity<ItemDto> getItemById(@RequestHeader("X-Sharer-User-Id") long userId,
+                                               @PathVariable long itemId) {
+        return ResponseEntity.ok().body(itemService.getItemById(itemId, userId));
     }
 
     @PatchMapping("/{itemId}")
@@ -50,7 +50,21 @@ public class ItemController {
     }
 
     @GetMapping("/search")
-    public ResponseEntity<List<ItemDto>> textSearch(@RequestParam(value = "text") String text) {
+    public ResponseEntity<List<ItemDto>> textSearch(@RequestHeader("X-Sharer-User-Id") long userId,
+                                                    @RequestParam(value = "text") String text) {
         return ResponseEntity.ok().body(itemService.textSearch(text));
+    }
+
+    @PostMapping("/{itemId}/comment")
+    public ResponseEntity<CommentDto> addComment(@RequestHeader("X-Sharer-User-Id") long userId,
+                                 @RequestBody CommentDto commentDto,
+                                 @PathVariable long itemId) {
+
+        String text = commentDto.getText();
+        if (text.isEmpty()) {
+            throw new ValidationException("Поле text не может быть пустым!");
+        }
+        commentDto.setText(text);
+        return ResponseEntity.ok().body(itemService.addComment(userId, itemId, commentDto));
     }
 }

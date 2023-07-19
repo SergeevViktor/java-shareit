@@ -2,7 +2,6 @@ package ru.practicum.shareit.user;
 
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.user.dto.UserDto;
@@ -12,9 +11,6 @@ import javax.validation.Valid;
 import java.net.URI;
 import java.util.List;
 
-/**
- * TODO Sprint add-controllers.
- */
 @RestController
 @RequestMapping(path = "/users")
 @Slf4j
@@ -48,9 +44,9 @@ public class UserController {
     }
 
     @DeleteMapping("/{userId}")
-    @ResponseStatus(HttpStatus.OK)
-    public void deleteUser(@PathVariable int userId) {
+    public ResponseEntity<Class<Void>> deleteUser(@PathVariable int userId) {
         log.info("Удаление пользователя, id: {}", userId);
         userService.deleteUser(userId);
+        return ResponseEntity.ok().body(Void.class);
     }
 }
