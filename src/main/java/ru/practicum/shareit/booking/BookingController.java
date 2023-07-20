@@ -11,10 +11,6 @@ import javax.validation.Valid;
 import java.net.URI;
 import java.util.List;
 
-/**
- * TODO Sprint add-bookings.
- */
-
 @RestController
 @RequestMapping(path = "/bookings")
 @Slf4j
