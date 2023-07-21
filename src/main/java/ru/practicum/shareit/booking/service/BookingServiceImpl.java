@@ -41,7 +41,6 @@ public class BookingServiceImpl implements BookingService {
             throw new ObjectNotFoundException("Пользователь не найден");
         }
         var user = userOptional.get();
-        var changeItem1 = itemRepository.findAll();
         var itemOptional = itemRepository.findById(bookingDto.getItemId());
         if (itemOptional.isEmpty()) {
             throw new ObjectNotFoundException("Вещь не существует");
@@ -66,8 +65,6 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public BookingDto approved(long userId, long bookingId, boolean available) {
-        var need = itemRepository.findAll();
-        var need1 = bookingRepository.findAll();
         var booking = bookingRepository.findById(bookingId);
         if (booking.isEmpty()) {
             throw new ObjectNotFoundException("Такого бронирования не существует!");
@@ -92,8 +89,6 @@ public class BookingServiceImpl implements BookingService {
 
     @Override
     public BookingDto getBooking(long userId, long bookingId) {
-        var need = itemRepository.findAll();
-        var need1 = bookingRepository.findAll();
         var booking = bookingRepository.findById(bookingId);
         if (booking.isEmpty()) {
             throw new ObjectNotFoundException("Такого бронирования не существует!");
@@ -120,8 +115,6 @@ public class BookingServiceImpl implements BookingService {
         if (user.isEmpty()) {
             throw new ObjectNotFoundException("Пользователь не найден");
         }
-        var need = itemRepository.findAll();
-        var need1 = bookingRepository.findAll();
         List<Booking> bookings = bookingRepository.findByBookerId(userId);
         LocalDateTime time = LocalDateTime.now();
         switch (stateEnum) {
@@ -142,7 +135,7 @@ public class BookingServiceImpl implements BookingService {
                 bookings = bookingRepository.findByBookerIdAndStatus(userId, Status.REJECTED, sort);
                 break;
             default:
-                Collections.sort(bookings, (booking1, booking2) -> booking2.getStarts().compareTo(booking1.getStarts()));
+                bookings.sort((booking1, booking2) -> booking2.getStarts().compareTo(booking1.getStarts()));
                 break;
         }
         List<BookingDto> result = new ArrayList<>();

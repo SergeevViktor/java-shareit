@@ -74,7 +74,6 @@ public class ItemRequestServiceImpl implements ItemRequestService {
 
     @Override
     public List<ItemRequestResponseDto> getAllRequests(long userId, int from, int size) {
-        //Для этого используйте метод PageRequest.of(page, size, sort) .
         PageRequest page = PageRequest.of(from, size);
         Page<ItemRequest> itemRequestList = itemRequestRepository.findByOrderByCreatedDesc(page);
         List<Long> requestIds = itemRequestList.stream()

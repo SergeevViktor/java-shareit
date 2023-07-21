@@ -6,7 +6,6 @@ import org.mapstruct.factory.Mappers;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.request.dto.ItemRequestResponseDtoItem;
 
-
 @Mapper
 public interface ItemMapper {
     ItemMapper INSTANCE = Mappers.getMapper(ItemMapper.class);
@@ -20,7 +19,6 @@ public interface ItemMapper {
     ItemRequestResponseDtoItem toItemRequestResponseDtoItem(Item source);
 
     static Long mapRequestId(Item source) {
-        Long result = source.getRequest() == null ? 0 : source.getRequest().getId();
-        return result;
+        return source.getRequest() == null ? 0 : source.getRequest().getId();
     }
 }

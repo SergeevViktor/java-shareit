@@ -16,6 +16,7 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemMapper;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
+import ru.practicum.shareit.request.ItemRequestRepository;
 import ru.practicum.shareit.user.UserRepository;
 
 import javax.transaction.Transactional;
@@ -35,11 +36,19 @@ public class ItemServiceImpl implements ItemService {
     private final UserRepository userRepository;
     private final BookingRepository bookingRepository;
     private final CommentRepository commentRepository;
+    private final ItemRequestRepository itemRequestRepository;
 
     @Override
     public ItemDto addItem(long userId, ItemDto itemDto) {
         validateItemDto(itemDto, false);
         Item item = ItemMapper.INSTANCE.toItem(itemDto);
+        if (itemDto.getRequestId() > 0) {
+            var request = itemRequestRepository.findById(itemDto.getRequestId());
+            if (request.isEmpty()) {
+                throw new ObjectNotFoundException("Такого запроса не существует!");
+            }
+            item.setRequest(request.get());
+        }
         var userOptional = userRepository.findById(userId);
         if (userOptional.isEmpty()) {
             throw new ObjectNotFoundException("Такого пользователя не существует.");
@@ -52,7 +61,6 @@ public class ItemServiceImpl implements ItemService {
     @Override
     public ItemDto updateItem(long userId, ItemDto itemDto) {
         Item item = ItemMapper.INSTANCE.toItem(itemDto);
-        var changeItem1 = itemRepository.findAll();
         var changeItem = itemRepository.findById(itemDto.getId());
         var currentItem = changeItem.get();
 
@@ -78,7 +86,6 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public ItemDto getItemById(long itemId, long userId) {
-        var changeItem1 = itemRepository.findAll();
         var item = itemRepository.findById(itemId).orElseThrow(() ->
                 new ObjectNotFoundException("Вещь не найдена!"));
         List<Comment> comments = commentRepository.findCommentsByItemId(itemId);
@@ -176,8 +183,6 @@ public class ItemServiceImpl implements ItemService {
 
     @Override
     public CommentDto addComment(long userId, long itemId, CommentDto commentDto) {
-        var need = itemRepository.findAll();
-        var need1 = bookingRepository.findAll();
         var itemOptional = itemRepository.findById(itemId);
         if (itemOptional.isEmpty()) {
             throw new ObjectNotFoundException("Такой вещи нет.");

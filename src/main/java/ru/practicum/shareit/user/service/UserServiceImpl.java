@@ -85,14 +85,8 @@ public class UserServiceImpl implements UserService {
     }
 
     private boolean userExists(long userId) {
-        boolean isExist = false;
-        for (User user : userRepository.findAll()) {
-            if (Objects.equals(user.getId(), userId)) {
-                isExist = true;
-                break;
-            }
-        }
-        return isExist;
+        var userOptional = userRepository.findById(userId);
+        return !userOptional.isEmpty();
     }
 
     private boolean emailExists(User user) {

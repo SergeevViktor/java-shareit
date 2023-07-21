@@ -26,7 +26,7 @@ public class ItemRequest {
     private Long id;
     @Column(name = "description")
     private String description;
-    @ManyToOne(fetch = FetchType.LAZY)
+    @ManyToOne()
     @JoinColumn(name = "requester_id", nullable = false)
     private User requester;
     @CreationTimestamp
