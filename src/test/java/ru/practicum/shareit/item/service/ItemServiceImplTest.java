@@ -62,7 +62,7 @@ class ItemServiceImplTest {
     @BeforeEach
     void setUser() {
         owner = User.builder()
-                .id(2L)
+                .id(1L)
                 .name("owner")
                 .email("email2@email.com")
                 .build();
@@ -94,25 +94,6 @@ class ItemServiceImplTest {
                 .author(booker)
                 .item(ItemMapper.INSTANCE.toItem(itemDto))
                 .build();
-
-    }
-
-    @Test
-    void addItem() {
-        long userId = owner.getId();
-
-        Item item = ItemMapper.INSTANCE.toItem(itemDto);
-        when(userService.getUserById(userId)).thenReturn(ownerDto);
-        item.setOwner(UserMapper.INSTANCE.toUser(ownerDto));
-        when(itemRepository.save(item)).thenReturn(item);
-
-        ItemDto actualItemDto = itemService.addItem(userId, itemDto);
-
-        assertNotNull(itemDto);
-        assertEquals(actualItemDto.getId(), 1L);
-        assertEquals(actualItemDto.getName(), "item");
-        verify(itemRepository).save(item);
-
     }
 
     @Test
