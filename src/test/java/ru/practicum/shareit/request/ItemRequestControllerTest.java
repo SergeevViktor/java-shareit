@@ -42,8 +42,8 @@ class ItemRequestControllerTest {
     void setObject() {
         requester = User.builder()
                 .id(1L)
-                .name("equal")
-                .email("equal@email.com")
+                .name("Olik13")
+                .email("Olik13@email.com")
                 .build();
         itemRequestDto = ItemRequestDto.builder()
                 .id(1L)
@@ -76,7 +76,6 @@ class ItemRequestControllerTest {
 
         assertEquals(objectMapper.writeValueAsString(itemRequestDto), contentAsString);
         verify(itemRequestService).addItemRequest(userId, itemRequestDto);
-
     }
 
     @SneakyThrows
@@ -120,7 +119,6 @@ class ItemRequestControllerTest {
         var result = List.of(itemRequestResponseDto);
         assertEquals(objectMapper.writeValueAsString(result), contentAsString);
         verify(itemRequestService).getAllRequests(userId, from, size);
-
     }
 
     @SneakyThrows
@@ -128,7 +126,6 @@ class ItemRequestControllerTest {
     void get() {
         long userId = requester.getId();
         long requestId = itemRequestResponseDto.getId();
-
 
         when(itemRequestService.getRequestById(userId, requestId)).thenReturn(itemRequestResponseDto);
 
@@ -143,6 +140,5 @@ class ItemRequestControllerTest {
 
         assertEquals(objectMapper.writeValueAsString(itemRequestResponseDto), contentAsString);
         verify(itemRequestService).getRequestById(userId, requestId);
-
     }
 }

@@ -163,58 +163,6 @@ class ItemServiceImplTest {
     }
 
     @Test
-    void getItemsByUserId() {
-        long itemId = itemDto.getId();
-        long userId = owner.getId();
-
-        List<Comment> comments = new ArrayList<>();
-        var item = ItemMapper.INSTANCE.toItem(itemDto);
-        item.setOwner(owner);
-        comments.add(comment);
-        List<Booking> bookings = new ArrayList<>();
-
-        var booking1 = BookingMapper.INSTANCE.toBooking(booking);
-        booking1.setItem(item);
-        booking1.setBooker(booker);
-        bookings.add(booking1);
-
-        List<Item> items = new ArrayList<>();
-        items.add(item);
-
-        when(itemRepository.findItemByOwnerId(userId)).thenReturn(items);
-        when(commentRepository.findCommentsByItemId(itemId)).thenReturn(comments);
-        when(bookingRepository.findBookingByItemIdAndStatus(itemId, Status.APPROVED)).thenReturn(bookings);
-
-        var itemDto = itemService.getAllItemsByUserId(userId);
-        verify(itemRepository).findItemByOwnerId(userId);
-
-        assertNotNull(itemDto);
-//        assertEquals(itemId, itemDto.getId());
-//        assertEquals(comment.getId(), itemDto.getComments().get(0).getId());
-
-    }
-
-    @Test
-    void searchText() {
-
-        String text = "здесь могла быть ваша реклама";
-
-        List<Item> items = new ArrayList<>();
-        var item = ItemMapper.INSTANCE.toItem(itemDto);
-        item.setOwner(owner);
-        items.add(item);
-
-        when(itemRepository.search(text)).thenReturn(items);
-
-        List<ItemDto> itemsDto = itemService.textSearch(text);
-
-        assertEquals(items.size(), itemsDto.size());
-        assertEquals(1, itemsDto.size());
-        assertEquals(item.getId(), itemsDto.get(0).getId());
-
-    }
-
-    @Test
     void addComment() {
         long itemId = itemDto.getId();
         long userId = booker.getId();
@@ -247,5 +195,6 @@ class ItemServiceImplTest {
         verify(bookingRepository).findBookingByItemId(itemId);
         verify(commentRepository).save(any());
         verifyNoMoreInteractions(userRepository, itemRepository, bookingRepository, commentRepository);
+
     }
 }

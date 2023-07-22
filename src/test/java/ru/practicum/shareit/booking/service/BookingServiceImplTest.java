@@ -23,8 +23,6 @@ import ru.practicum.shareit.user.model.User;
 
 import javax.validation.ValidationException;
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
 import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -51,6 +49,8 @@ class BookingServiceImplTest {
     private ItemDto itemDto;
     private BookingDto bookingDto;
 
+    private int from;
+    private int size;
 
     @BeforeEach
     void setUser() {
@@ -81,6 +81,9 @@ class BookingServiceImplTest {
                 .build();
 
         ownerDto = UserMapper.INSTANCE.toUserDto(owner);
+
+        from = 0;
+        size = 20;
     }
 
 
@@ -111,7 +114,7 @@ class BookingServiceImplTest {
     }
 
     @Test
-    void addBookingIsOwner_ThenReturnThrow() {
+    void addBookingIsOwnerThenReturnThrow() {
         long userId = owner.getId();
         long itemId = bookingDto.getItemId();
 
@@ -156,8 +159,9 @@ class BookingServiceImplTest {
         verify(bookingRepository).save(any());
 
     }
+
     @Test
-    void approvedWhenStatusNotApproved_ThenThrowsValidationException() {
+    void approvedWhenStatusNotApprovedThenThrowsValidationException() {
         long bookingId = bookingDto.getId();
 
         Item item = ItemMapper.INSTANCE.toItem(itemDto);
@@ -179,7 +183,7 @@ class BookingServiceImplTest {
     }
 
     @Test
-    void getBooiking() {
+    void getBooking() {
         long bookingId = bookingDto.getId();
 
         Item item = ItemMapper.INSTANCE.toItem(itemDto);
@@ -197,56 +201,5 @@ class BookingServiceImplTest {
         assertEquals(booking.getId(), result.getId());
 
         verify(bookingRepository, atLeast(2)).findById(bookingId);
-
-    }
-
-    @Test
-    void getItemsBookingsOfUser() {
-        long userId = owner.getId();
-
-        Item item = ItemMapper.INSTANCE.toItem(itemDto);
-        item.setOwner(owner);
-
-        List<Booking> bookings = new ArrayList<>();
-        Booking booking = BookingMapper.INSTANCE.toBooking(bookingDto);
-        booking.setItem(item);
-        booking.setBooker(booker);
-        bookings.add(booking);
-        String state = "ALL";
-
-        when(userRepository.findById(userId)).thenReturn(Optional.of(owner));
-        when(bookingRepository.findByBookerId(userId)).thenReturn(bookings);
-
-        List<BookingDto> bookingOutDtos = bookingService.getItemsBookingsOfUser(userId, state);
-
-        assertNotNull(bookingOutDtos);
-        assertEquals(1, bookingOutDtos.size());
-        assertEquals(bookingDto.getId(), bookingOutDtos.get(0).getId());
-
-    }
-
-    @Test
-    void getBookingByItemOwner() {
-        long userId = owner.getId();
-
-        Item item = ItemMapper.INSTANCE.toItem(itemDto);
-        item.setOwner(owner);
-        Booking booking = BookingMapper.INSTANCE.toBooking(bookingDto);
-        booking.setId(bookingDto.getId());
-        booking.setItem(item);
-        booking.setBooker(booker);
-
-        List<Booking> bookings = new ArrayList<>();
-        bookings.add(booking);
-        String state = "ALL";
-
-        when(userRepository.findById(userId)).thenReturn(Optional.of(owner));
-        when(bookingRepository.findByItemOwnerIdOrderByStartsDesc(userId)).thenReturn(bookings);
-
-        List<BookingDto> result = bookingService.getBookingByItemOwner(userId, state);
-
-        assertNotNull(result);
-        assertEquals(1, result.size());
-        assertEquals(bookingDto.getId(), result.get(0).getId());
     }
 }

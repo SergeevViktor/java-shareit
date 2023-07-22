@@ -105,15 +105,15 @@ class ItemControllerTest {
 
     @SneakyThrows
     @Test
-    void seachText() {
+    void textSearch() {
         var userId = 0L;
         String text = "text";
-        List<ItemDto> itemDtos = List.of(ItemDto.builder()
+        List<ItemDto> itemsDto = List.of(ItemDto.builder()
                 .name("name")
                 .available(true)
                 .build());
 
-        when(itemService.textSearch(text)).thenReturn(itemDtos);
+        when(itemService.textSearch(text)).thenReturn(itemsDto);
 
         String contentAsString = mockMvc.perform(get("/items/search")
                         .header("X-Sharer-User-Id", userId)
@@ -123,7 +123,7 @@ class ItemControllerTest {
                 .getResponse()
                 .getContentAsString();
 
-        assertEquals(objectMapper.writeValueAsString(itemDtos), contentAsString);
+        assertEquals(objectMapper.writeValueAsString(itemsDto), contentAsString);
         verify(itemService, times(1)).textSearch(text);
     }
 
