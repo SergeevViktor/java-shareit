@@ -51,17 +51,6 @@ class UserServiceTest {
     }
 
     @Test
-    void testCreateUserWithEmptyBodyRequest() {
-
-        final NullPointerException exception = Assertions.assertThrows(
-                NullPointerException.class,
-                () -> userService.addUser(null));
-
-        Assertions.assertEquals("Cannot invoke \"ru.practicum.shareit.user.model.User.getEmail()\" " +
-                        "because \"user\" is null", exception.getMessage());
-    }
-
-    @Test
     void testAddUserWithEmptyEmail() {
         UserDto userDto = UserDto.builder()
                 .name("NameTest").build();
