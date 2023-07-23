@@ -15,9 +15,6 @@ import javax.validation.constraints.Min;
 import java.net.URI;
 import java.util.List;
 
-/**
- * TODO Sprint add-item-requests.
- */
 @RestController
 @RequestMapping(path = "/requests")
 @Slf4j
