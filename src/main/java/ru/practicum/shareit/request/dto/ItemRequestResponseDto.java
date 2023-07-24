@@ -4,17 +4,17 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
-import ru.practicum.shareit.user.model.User;
 
 import java.time.LocalDateTime;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
 @NoArgsConstructor
 @Builder
-public class ItemRequestDto {
+public class ItemRequestResponseDto {
     private Long id;
     private String description;
-    private User requester;
+    private List<ItemRequestResponseDtoItem> items;
     private LocalDateTime created;
 }

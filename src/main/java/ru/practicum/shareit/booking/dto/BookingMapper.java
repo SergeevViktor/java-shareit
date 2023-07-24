@@ -18,4 +18,9 @@ public interface BookingMapper {
     @Mapping(target = "starts", source = "bookingDto.start")
     @Mapping(target = "ends", source = "bookingDto.end")
     Booking toBooking(BookingDto bookingDto);
+
+    @Mapping(target = "start", source = "booking.starts")
+    @Mapping(target = "end", source = "booking.ends")
+    @Mapping(target = "itemId", source = "booking.item.id")
+    BookingResponseDto toBookingResponseDto(Booking booking);
 }

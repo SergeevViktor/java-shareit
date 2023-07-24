@@ -8,12 +8,10 @@ import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.service.BookingService;
 
 import javax.validation.Valid;
+import javax.validation.constraints.Max;
+import javax.validation.constraints.Min;
 import java.net.URI;
 import java.util.List;
-
-/**
- * TODO Sprint add-bookings.
- */
 
 @RestController
 @RequestMapping(path = "/bookings")
@@ -24,8 +22,10 @@ public class BookingController {
 
     @GetMapping
     public ResponseEntity<List<BookingDto>> getBookingsOfUser(@RequestHeader("X-Sharer-User-Id") long userId,
-                                                              @RequestParam(defaultValue = "ALL") String state) {
-        return ResponseEntity.ok().body(bookingService.getItemsBookingsOfUser(userId, state));
+                                                              @RequestParam(defaultValue = "ALL") String state,
+                                                              @RequestParam(defaultValue = "0") @Min(0) Integer from,
+                                                              @RequestParam(defaultValue = "20") @Min(1) @Max(100) Integer size) {
+        return ResponseEntity.ok().body(bookingService.getItemsBookingsOfUser(userId, state, from, size));
     }
 
     @PostMapping
@@ -38,8 +38,10 @@ public class BookingController {
 
     @GetMapping("/owner")
     public ResponseEntity<List<BookingDto>> getBookingByItemOwner(@RequestHeader("X-Sharer-User-Id") long userId,
-                                                                  @RequestParam(defaultValue = "ALL") String state) {
-        return ResponseEntity.ok().body(bookingService.getBookingByItemOwner(userId, state));
+                                                                  @RequestParam(defaultValue = "ALL") String state,
+                                                                  @RequestParam(defaultValue = "0") @Min(0) Integer from,
+                                                                  @RequestParam(defaultValue = "20") @Min(1) @Max(100) Integer size) {
+        return ResponseEntity.ok().body(bookingService.getBookingByItemOwner(userId, state, from, size));
     }
 
     @GetMapping("/{bookingId}")
