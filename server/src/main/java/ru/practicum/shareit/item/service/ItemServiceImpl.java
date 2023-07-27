@@ -11,10 +11,7 @@ import ru.practicum.shareit.exception.ObjectNotFoundException;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.CommentRepository;
 import ru.practicum.shareit.item.ItemRepository;
-import ru.practicum.shareit.item.dto.CommentDto;
-import ru.practicum.shareit.item.dto.CommentMapper;
-import ru.practicum.shareit.item.dto.ItemDto;
-import ru.practicum.shareit.item.dto.ItemMapper;
+import ru.practicum.shareit.item.dto.*;
 import ru.practicum.shareit.item.model.Comment;
 import ru.practicum.shareit.item.model.Item;
 import ru.practicum.shareit.request.ItemRequestRepository;
@@ -39,8 +36,7 @@ public class ItemServiceImpl implements ItemService {
     private final ItemRequestRepository itemRequestRepository;
 
     @Override
-    public ItemDto addItem(long userId, ItemDto itemDto) {
-        validateItemDto(itemDto, false);
+    public ItemDto addItem(long userId, ItemItemRequestDto itemDto) {
         Item item = ItemMapper.INSTANCE.toItem(itemDto);
         if (itemDto.getRequestId() > 0) {
             var request = itemRequestRepository.findById(itemDto.getRequestId());
@@ -59,7 +55,7 @@ public class ItemServiceImpl implements ItemService {
     }
 
     @Override
-    public ItemDto updateItem(long userId, ItemDto itemDto) {
+    public ItemDto updateItem(long userId, ItemItemRequestDto itemDto) {
         Item item = ItemMapper.INSTANCE.toItem(itemDto);
         var changeItem = itemRepository.findById(itemDto.getId());
         var currentItem = changeItem.get();
@@ -80,7 +76,6 @@ public class ItemServiceImpl implements ItemService {
         if (itemDto.getAvailable() != null) {
             currentItem.setAvailable(item.isAvailable());
         }
-        validateItemDto(itemDto, true);
         return ItemMapper.INSTANCE.toItemDto(itemRepository.save(currentItem));
     }
 
@@ -211,21 +206,5 @@ public class ItemServiceImpl implements ItemService {
         comment.setItem(item);
         comment.setCreated(LocalDateTime.now());
         return CommentMapper.INSTANCE.toCommentDto(commentRepository.save(comment));
-    }
-
-    private void validateItemDto(ItemDto itemDto, boolean isUpdate) {
-        if (isUpdate && (itemDto.getName() != null && itemDto.getName().isBlank()) ||
-                (!isUpdate && (itemDto.getName() == null || itemDto.getName().isBlank()))) {
-            throw new ValidationException("Не указано поле Name");
-        }
-
-        if (isUpdate && (itemDto.getDescription() != null && itemDto.getDescription().isBlank()) ||
-                !isUpdate && (itemDto.getDescription() == null || itemDto.getDescription().isBlank())) {
-            throw new ValidationException("Не указано поле Description");
-        }
-
-        if (!isUpdate && itemDto.getAvailable() == null) {
-            throw new ValidationException("Отсуствует поле Accessible");
-        }
     }
 }

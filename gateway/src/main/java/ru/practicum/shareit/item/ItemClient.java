@@ -9,7 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.util.DefaultUriBuilderFactory;
 import ru.practicum.shareit.client.BaseClient;
 import ru.practicum.shareit.item.dto.CommentDto;
-import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemItemRequestDto;
 
 import javax.validation.ValidationException;
 import java.util.Map;
@@ -28,14 +28,14 @@ public class ItemClient extends BaseClient {
         );
     }
 
-    public ResponseEntity<Object> addItem(long userId, ItemDto itemDto) {
+    public ResponseEntity<Object> addItem(long userId, ItemItemRequestDto itemDto) {
         validateItemDto(itemDto, false);
         return post("", userId, itemDto);
     }
 
-    public ResponseEntity<Object> updateItem(long userId, ItemDto itemDto) {
+    public ResponseEntity<Object> updateItem(long userId, ItemItemRequestDto itemDto) {
         validateItemDto(itemDto, true);
-        return patch("/" + userId, itemDto);
+        return patch("/" + itemDto.getId(), userId, itemDto);
     }
 
     public ResponseEntity<Object> getItem(long itemId, long userId) {
@@ -63,7 +63,7 @@ public class ItemClient extends BaseClient {
         return post(String.format("/%s/comment", itemId), userId, commentDto);
     }
 
-    private void validateItemDto(ItemDto itemDto, boolean isUpdate) {
+    private void validateItemDto(ItemItemRequestDto itemDto, boolean isUpdate) {
         if (isUpdate && (itemDto.getName() != null && itemDto.getName().isBlank()) ||
                 (!isUpdate && (itemDto.getName() == null || itemDto.getName().isBlank()))) {
             throw new ValidationException("Не указано поле Name");

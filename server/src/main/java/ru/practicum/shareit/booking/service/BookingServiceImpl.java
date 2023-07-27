@@ -106,10 +106,11 @@ public class BookingServiceImpl implements BookingService {
     @Override
     public List<BookingDto> getItemsBookingsOfUser(long userId, String state, int from, int size) {
         if (from < 0) {
-            throw new ValidationException("From не может быть отрицальным!");
+            throw new javax.validation.ValidationException("Отрицательное значение фром");
         }
-        PageRequest page = PageRequest.of(from / size, size);
-        PageRequest pageWithSort = PageRequest.of(from / size, size, sort);
+        int offsets = from > 0 ? from / size : 0;
+        PageRequest page = PageRequest.of(offsets, size);
+        PageRequest pageWithSort = PageRequest.of(offsets, size, sort);
         State stateEnum;
         try {
             stateEnum = State.valueOf(state);
@@ -158,8 +159,9 @@ public class BookingServiceImpl implements BookingService {
         if (from < 0) {
             throw new ValidationException("From не может быть отрицальным!");
         }
-        PageRequest page = PageRequest.of(from / size, size);
-        PageRequest pageWithSort = PageRequest.of(from / size, size, sort);
+        int offsets = from > 0 ? from / size : 0;
+        PageRequest page = PageRequest.of(offsets, size);
+        PageRequest pageWithSort = PageRequest.of(offsets, size, sort);
         State stateEnum;
         try {
             stateEnum = State.valueOf(state);

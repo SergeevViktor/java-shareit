@@ -1,21 +1,18 @@
 package ru.practicum.shareit.item.dto;
 
 import lombok.AllArgsConstructor;
-import lombok.Getter;
+import lombok.Builder;
+import lombok.Data;
 import lombok.NoArgsConstructor;
-import lombok.Setter;
 
-import java.util.ArrayList;
-import java.util.List;
-@Getter
-@Setter
-@NoArgsConstructor
+@Data
 @AllArgsConstructor
-public class ItemDto {
+@NoArgsConstructor
+@Builder
+public class ItemItemRequestDto {
     private long id;
     private String name;
     private String description;
     private Boolean available;
     private long requestId;
-    private List<CommentDto> comments = new ArrayList<>();
 }

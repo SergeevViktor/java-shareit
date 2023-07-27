@@ -8,7 +8,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.item.dto.CommentDto;
-import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemItemRequestDto;
+import ru.practicum.shareit.validation.ValidationGroups;
 
 import javax.validation.Valid;
 import javax.validation.ValidationException;
@@ -36,8 +37,9 @@ public class ItemController {
     }
 
     @PostMapping
+    @Validated(ValidationGroups.Create.class)
     public ResponseEntity<Object> addItem(@RequestHeader("X-Sharer-User-Id") long userId,
-                                          @RequestBody @Valid ItemDto requestDto) {
+                                          @RequestBody @Valid ItemItemRequestDto requestDto) {
         log.info("Creating item {}, userId={}", requestDto, userId);
         return itemClient.addItem(userId, requestDto);
     }
@@ -46,15 +48,15 @@ public class ItemController {
     public ResponseEntity<Object> getItemById(@RequestHeader("X-Sharer-User-Id") long userId,
                                               @PathVariable long itemId) {
         log.info("Get item {}, userId={}", itemId, userId);
-        return itemClient.getItem(userId, itemId);
+        return itemClient.getItem(itemId, userId);
     }
 
     @PatchMapping("/{itemId}")
-    @ResponseStatus(HttpStatus.OK)
+    @Validated(ValidationGroups.Update.class)
     public ResponseEntity<Object> updateItem(@RequestHeader("X-Sharer-User-Id") Long userId,
                                              @PathVariable long itemId,
-                                             @RequestBody ItemDto itemDto) {
-        log.info("Обновление вещи id: {}", userId);
+                                             @Valid  @RequestBody ItemItemRequestDto itemDto) {
+        log.info("Обновление вещи id: {}", itemId);
         itemDto.setId(itemId);
         return itemClient.updateItem(userId, itemDto);
     }

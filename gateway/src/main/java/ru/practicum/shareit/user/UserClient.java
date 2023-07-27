@@ -38,9 +38,8 @@ public class UserClient extends BaseClient {
         if (userDto == null) {
             throw new ValidationException("Такой пользователь не существует!");
         }
-        validateUser(userDto);
         log.info("Данные пользователя обновлены: {}", userDto.getName());
-        return patch("", userDto);
+        return patch("/" + userDto.getId(), userDto);
     }
 
     public ResponseEntity<Object> getAllUsers() {

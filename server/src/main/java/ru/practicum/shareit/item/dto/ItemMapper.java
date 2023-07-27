@@ -13,7 +13,7 @@ public interface ItemMapper {
     @Mapping(target = "requestId", source = "source")
     ItemDto toItemDto(Item source);
 
-    Item toItem(ItemDto itemDto);
+    Item toItem(ItemItemRequestDto itemDto);
 
     @Mapping(target = "requestId", source = "source")
     ItemRequestResponseDtoItem toItemRequestResponseDtoItem(Item source);

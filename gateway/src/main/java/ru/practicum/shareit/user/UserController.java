@@ -8,6 +8,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.validation.ValidationGroups;
 
 import javax.validation.Valid;
 import javax.validation.constraints.*;
@@ -28,14 +29,17 @@ public class UserController {
 
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
-    public ResponseEntity<Object> addUser(@NotNull @NotBlank @Valid @RequestBody UserDto user) {
+    @Validated(ValidationGroups.Create.class)
+    public ResponseEntity<Object> addUser(@Valid @RequestBody UserDto user) {
         log.info("Добавлен пользователь: {}", user);
         return userClient.addUser(user);
     }
 
     @PatchMapping("/{userId}")
     @ResponseStatus(HttpStatus.OK)
-    public ResponseEntity<Object> updateUser(@RequestBody @Valid UserDto user, @PathVariable Long userId) {
+    @Validated(ValidationGroups.Update.class)
+    public ResponseEntity<Object> updateUser(@RequestBody @Valid UserDto user,
+                                             @PathVariable Long userId) {
         log.info("Обновление данных пользователя c id: {}", userId);
         user.setId(userId);
         return userClient.updateUser(user);

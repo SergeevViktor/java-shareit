@@ -24,7 +24,7 @@ public class UserServiceImpl implements UserService {
     @Override
     public UserDto addUser(UserDto userDto) {
         User user = UserMapper.INSTANCE.toUser(userDto);
-        validateUser(user);
+        log.info("Добавлен новый пользователь; {}", user.getName());
         return UserMapper.INSTANCE.toUserDto(userRepository.save(user));
     }
 
@@ -32,16 +32,12 @@ public class UserServiceImpl implements UserService {
     public UserDto updateUser(UserDto userDto) {
         User newUser = UserMapper.INSTANCE.toUser(userDto);
         var user = userRepository.findById(newUser.getId()).get();
-        if (user == null) {
-            throw new ValidationException("Такой пользователь не существует!");
-        }
         if (newUser.getEmail() != null) {
             user.setEmail(newUser.getEmail());
         }
         if (newUser.getName() != null) {
             user.setName(newUser.getName());
         }
-        validateUser(user);
         log.info("Данные пользователя обновлены: {}", user.getName());
         return UserMapper.INSTANCE.toUserDto(userRepository.save(user));
     }
@@ -68,20 +64,7 @@ public class UserServiceImpl implements UserService {
             throw new ObjectNotFoundException("Пользователя не существует!");
         }
         User user = userRepository.findById(id).get();
-        validateUser(user);
         return UserMapper.INSTANCE.toUserDto(user);
-    }
-
-    private void validateUser(User user) {
-        if (user.getEmail() == null || user.getEmail().isEmpty()) {
-            throw new ValidationException("Email не может быть пустым!");
-        }
-        if (!user.getEmail().contains("@")) {
-            throw new ValidationException("Email должно содержать символ @");
-        }
-        if (user.getName() == null || user.getName().isEmpty() || user.getName().isBlank()) {
-            throw new ObjectNotFoundException("Пользователь не найден");
-        }
     }
 
     private boolean userExists(long userId) {

@@ -59,6 +59,7 @@ public class BookingController {
         return bookingClient.getBooking(userId, bookingId);
     }
 
+    //?
     @PatchMapping("/{bookingId}")
     @ResponseStatus(HttpStatus.OK)
     public ResponseEntity<Object> approvedBooking(@RequestHeader("X-Sharer-User-Id") Long userId,

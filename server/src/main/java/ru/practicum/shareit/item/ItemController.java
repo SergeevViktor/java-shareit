@@ -7,6 +7,7 @@ import org.springframework.web.bind.annotation.*;
 import ru.practicum.shareit.exception.ValidationException;
 import ru.practicum.shareit.item.dto.CommentDto;
 import ru.practicum.shareit.item.dto.ItemDto;
+import ru.practicum.shareit.item.dto.ItemItemRequestDto;
 import ru.practicum.shareit.item.service.ItemService;
 
 import javax.validation.Valid;
@@ -26,7 +27,7 @@ public class ItemController {
     }
 
     @PostMapping
-    public ResponseEntity<ItemDto> addItem(@Valid @RequestBody ItemDto itemDto,
+    public ResponseEntity<ItemDto> addItem(@Valid @RequestBody ItemItemRequestDto itemDto,
                                            @RequestHeader("X-Sharer-User-Id") Long userId) {
         log.info("Добавление вещи.");
         return ResponseEntity.created(URI.create("http://localhost:8080/items"))
@@ -42,7 +43,7 @@ public class ItemController {
     @PatchMapping("/{itemId}")
     public ResponseEntity<ItemDto> updateItem(@RequestHeader("X-Sharer-User-Id") long userId,
                                               @PathVariable long itemId,
-                                              @RequestBody ItemDto itemDto) {
+                                              @RequestBody ItemItemRequestDto itemDto) {
 
         itemDto.setId(itemId);
         log.info("Обновление вещи.");
