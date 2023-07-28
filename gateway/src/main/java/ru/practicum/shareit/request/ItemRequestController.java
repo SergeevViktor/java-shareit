@@ -21,6 +21,7 @@ import javax.validation.constraints.Min;
 @Validated
 public class ItemRequestController {
     private final ItemRequestClient requestClient;
+
     @PostMapping
     @ResponseStatus(HttpStatus.CREATED)
     @Validated(ValidationGroups.Create.class)
@@ -40,8 +41,7 @@ public class ItemRequestController {
     public ResponseEntity<Object> returnAll(@RequestHeader("X-Sharer-User-Id") long userId,
                                                   @RequestParam(defaultValue = "0") @Min(0) Integer from,
                                                   @RequestParam(defaultValue = "20") @Min(1) @Max(100) Integer size) {
-        var result = requestClient.getAllRequests(userId, from, size);
-        return result;
+        return requestClient.getAllRequests(userId, from, size);
     }
 
     @GetMapping("/{requestId}")

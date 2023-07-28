@@ -30,10 +30,10 @@ public class BaseClient {
     protected ResponseEntity<Object> get(String path, Long userId, @Nullable Map<String, Object> parameters) {
         return makeAndSendRequest(HttpMethod.GET, path, userId, parameters, null);
     }
+
     protected ResponseEntity<Object> get(String path, @Nullable Map<String, Object> parameters) {
         return makeAndSendRequest(HttpMethod.GET, path, 0L, parameters, null);
     }
-
 
     protected <T> ResponseEntity<Object> post(String path, T body) {
         return post(path, null, null, body);
