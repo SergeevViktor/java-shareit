@@ -29,10 +29,9 @@ import java.util.Optional;
 import java.util.stream.Collectors;
 
 import static org.hibernate.validator.internal.util.Contracts.assertNotNull;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.mockito.Mockito.*;
+
 
 @ExtendWith(MockitoExtension.class)
 class ItemRequestServiceImplTest {
@@ -46,7 +45,7 @@ class ItemRequestServiceImplTest {
     private ItemRequestServiceImpl itemRequestService;
     private User owner;
     private UserDto ownerDto;
-    private User requester;
+    private User requestor;
     private ItemDto itemDto;
     private ItemRequestDto itemRequestDto;
 
@@ -58,9 +57,9 @@ class ItemRequestServiceImplTest {
                 .email("email2@email.com")
                 .build();
 
-        requester = User.builder()
+        requestor = User.builder()
                 .id(1L)
-                .name("requester")
+                .name("requestor")
                 .email("email2@email.com")
                 .build();
         itemDto = ItemDto.builder()
@@ -73,20 +72,21 @@ class ItemRequestServiceImplTest {
         itemRequestDto = ItemRequestDto.builder()
                 .id(1L)
                 .description("description ItemRequestDto")
-                .requester(requester)
+                .requestor(requestor)
                 .created(LocalDateTime.now())
                 .build();
 
-        ownerDto = UserMapper.INSTANCE.toUserDto(owner);
+        ownerDto = UserMapper.toUserDto(owner);
     }
 
     @Test
     void addItemRequest() {
-        long userId = requester.getId();
 
-        ItemRequest itemRequest = ItemRequestMapper.INSTANCE.toItemRequest(itemRequestDto);
+        long userId = requestor.getId();
 
-        when(userRepository.findById(userId)).thenReturn(Optional.of(requester));
+        ItemRequest itemRequest = ItemRequestMapper.toItemRequest(itemRequestDto);
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(requestor));
         when(itemRequestRepository.save(itemRequest)).thenReturn(itemRequest);
 
         ItemRequestDto result = itemRequestService.addItemRequest(userId, itemRequestDto);
@@ -95,20 +95,22 @@ class ItemRequestServiceImplTest {
         assertEquals(itemRequestDto.getId(), result.getId());
 
         verify(itemRequestRepository).save(any());
+
     }
 
     @Test
     void getItemsRequests() {
-        long userId = requester.getId();
 
-        ItemRequest itemRequest = ItemRequestMapper.INSTANCE.toItemRequest(itemRequestDto);
-        List<Item> itemList = List.of(ItemMapper.INSTANCE.toItem(itemDto));
+        long userId = requestor.getId();
+
+        ItemRequest itemRequest = ItemRequestMapper.toItemRequest(itemRequestDto);
+        List<Item> itemList = List.of(ItemMapper.toItem(itemDto));
         itemList.get(0).setRequest(itemRequest);
         List<Long> requestIds = (List.of(itemRequest)).stream()
                 .map(ItemRequest::getId)
                 .collect(Collectors.toList());
 
-        when(userRepository.findById(userId)).thenReturn(Optional.of(requester));
+        when(userRepository.findById(userId)).thenReturn(Optional.of(requestor));
         when(itemRequestRepository.findItemRequestsByRequesterId(userId))
                 .thenReturn(List.of(itemRequest));
         when(itemRepository.findItemsByRequestIdIn(requestIds)).thenReturn(itemList);
@@ -126,9 +128,9 @@ class ItemRequestServiceImplTest {
         int size = 20;
         PageRequest page = PageRequest.of(from, size);
 
-        ItemRequest itemRequest = ItemRequestMapper.INSTANCE.toItemRequest(itemRequestDto);
+        ItemRequest itemRequest = ItemRequestMapper.toItemRequest(itemRequestDto);
         List<ItemRequest> expectedRequestsDto = List.of(itemRequest);
-        Item item = ItemMapper.INSTANCE.toItem(itemDto);
+        Item item = ItemMapper.toItem(itemDto);
 
         List<Long> requestIds = (new PageImpl<>(List.of(itemRequest))).stream()
                 .map(ItemRequest::getId)
@@ -137,9 +139,9 @@ class ItemRequestServiceImplTest {
         itemList.get(0).setRequest(itemRequest);
 
         var result = expectedRequestsDto.stream()
-                .map(ItemRequestMapper.INSTANCE::toItemRequestResponseDto)
+                .map(ItemRequestMapper::toItemRequestResponseDto)
                 .collect(Collectors.toList());
-        result.get(0).setItems(List.of(ItemMapper.INSTANCE.toItemRequestResponseDtoItem(item)));
+        result.get(0).setItems(List.of(ItemMapper.toItemRequestResponseDtoItem(item)));
 
         when(itemRequestRepository.findByOrderByCreatedDesc(page))
                 .thenReturn(new PageImpl<>(List.of(itemRequest)));
@@ -149,29 +151,33 @@ class ItemRequestServiceImplTest {
 
         assertEquals(result, actualRequestsDto);
         assertNotNull(actualRequestsDto);
+
+
     }
 
     @Test
     void getRequestById() {
-        long userId = requester.getId();
+        long userId = requestor.getId();
         long requestId = itemRequestDto.getId();
-        ItemRequest itemRequest = ItemRequestMapper.INSTANCE.toItemRequest(itemRequestDto);
+        ItemRequest itemRequest = ItemRequestMapper.toItemRequest(itemRequestDto);
 
-        Item item = ItemMapper.INSTANCE.toItem(itemDto);
+        Item item = ItemMapper.toItem(itemDto);
         List<Item> itemList = List.of(item);
 
-        ItemRequestResponseDto result = ItemRequestMapper.INSTANCE.toItemRequestResponseDto(itemRequest);
+        ItemRequestResponseDto result = ItemRequestMapper.toItemRequestResponseDto(itemRequest);
         result.setItems(new ArrayList<>());
         for (Item item1 : itemList) {
-            result.getItems().add(ItemMapper.INSTANCE.toItemRequestResponseDtoItem(item1));
+            result.getItems().add(ItemMapper.toItemRequestResponseDtoItem(item1));
         }
 
-        when(userRepository.findById(userId)).thenReturn(Optional.of(requester));
+
+        when(userRepository.findById(userId)).thenReturn(Optional.of(requestor));
         when(itemRequestRepository.findById(requestId)).thenReturn(Optional.ofNullable(itemRequest));
         when(itemRepository.findItemsByRequestId(requestId)).thenReturn(itemList);
 
         ItemRequestResponseDto actual = itemRequestService.getRequestById(userId, requestId);
 
         assertEquals(actual, result);
+
     }
 }

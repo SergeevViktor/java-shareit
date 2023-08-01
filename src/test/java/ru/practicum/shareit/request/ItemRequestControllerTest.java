@@ -19,7 +19,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -35,12 +35,12 @@ class ItemRequestControllerTest {
     private ItemRequestService itemRequestService;
     private ItemRequestDto itemRequestDto;
     private ItemRequestResponseDto itemRequestResponseDto;
-    private User requester;
+    private User requestor;
 
     @BeforeEach
     @Test
     void setObject() {
-        requester = User.builder()
+        requestor = User.builder()
                 .id(1L)
                 .name("Olik13")
                 .email("Olik13@email.com")
@@ -48,7 +48,7 @@ class ItemRequestControllerTest {
         itemRequestDto = ItemRequestDto.builder()
                 .id(1L)
                 .description("description of ItemRequestDto")
-                .requester(requester)
+                .requestor(requestor)
                 .build();
         itemRequestResponseDto = ItemRequestResponseDto.builder()
                 .id(1L)
@@ -61,7 +61,7 @@ class ItemRequestControllerTest {
     @SneakyThrows
     @Test
     void addRequest() {
-        long userId = requester.getId();
+        long userId = requestor.getId();
 
         when(itemRequestService.addItemRequest(userId, itemRequestDto)).thenReturn(itemRequestDto);
 
@@ -76,12 +76,13 @@ class ItemRequestControllerTest {
 
         assertEquals(objectMapper.writeValueAsString(itemRequestDto), contentAsString);
         verify(itemRequestService).addItemRequest(userId, itemRequestDto);
+
     }
 
     @SneakyThrows
     @Test
     void getItemsByUserId() {
-        long userId = requester.getId();
+        long userId = requestor.getId();
 
         when(itemRequestService.getItemsRequests(userId)).thenReturn(List.of(itemRequestResponseDto));
 
@@ -101,7 +102,7 @@ class ItemRequestControllerTest {
     @SneakyThrows
     @Test
     void returnAll() {
-        long userId = requester.getId();
+        long userId = requestor.getId();
         int from = 0;
         int size = 20;
 
@@ -119,13 +120,15 @@ class ItemRequestControllerTest {
         var result = List.of(itemRequestResponseDto);
         assertEquals(objectMapper.writeValueAsString(result), contentAsString);
         verify(itemRequestService).getAllRequests(userId, from, size);
+
     }
 
     @SneakyThrows
     @Test
     void get() {
-        long userId = requester.getId();
+        long userId = requestor.getId();
         long requestId = itemRequestResponseDto.getId();
+
 
         when(itemRequestService.getRequestById(userId, requestId)).thenReturn(itemRequestResponseDto);
 
@@ -140,5 +143,6 @@ class ItemRequestControllerTest {
 
         assertEquals(objectMapper.writeValueAsString(itemRequestResponseDto), contentAsString);
         verify(itemRequestService).getRequestById(userId, requestId);
+
     }
 }

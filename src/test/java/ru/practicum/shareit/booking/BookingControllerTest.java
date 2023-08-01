@@ -20,10 +20,10 @@ import ru.practicum.shareit.user.model.User;
 import java.time.LocalDateTime;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -122,7 +122,7 @@ class BookingControllerTest {
     void getBooking() {
         var bookingId = bookingDto.getId();
         var userId = booker.getId();
-        when(bookingService.getBooking(userId, bookingId)).thenReturn(bookingDto);
+        when(bookingService.getBooiking(userId, bookingId)).thenReturn(bookingDto);
         String contentAsString = mockMvc.perform(get("/bookings/{bookingId}", bookingId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("X-Sharer-User-Id", userId)
@@ -133,7 +133,7 @@ class BookingControllerTest {
                 .getContentAsString();
 
         assertEquals(objectMapper.writeValueAsString(bookingDto), contentAsString);
-        verify(bookingService, atLeast(1)).getBooking(bookingId, userId);
+        verify(bookingService, atLeast(1)).getBooiking(bookingId, userId);
 
     }
 
@@ -143,7 +143,7 @@ class BookingControllerTest {
         State state = State.ALL;
         var userId = booker.getId();
         List<BookingDto> bookingDtoList = List.of(bookingDto);
-        when(bookingService.getItemsBookingsOfUser(userId, String.valueOf(state), from, size)).thenReturn(bookingDtoList);
+        when(bookingService.getItemsBookingsOfUser(userId, state, from, size)).thenReturn(bookingDtoList);
 
         mockMvc.perform(get("/bookings")
                         .header("X-Sharer-User-Id", userId)
@@ -154,7 +154,7 @@ class BookingControllerTest {
                 .getResponse()
                 .getContentAsString();
 
-        verify(bookingService, times(1)).getItemsBookingsOfUser(userId, String.valueOf(state), from, size);
+        verify(bookingService, times(1)).getItemsBookingsOfUser(userId, state, from, size);
 
     }
 
@@ -165,7 +165,7 @@ class BookingControllerTest {
         State state = State.ALL;
         var userId = booker.getId();
         List<BookingDto> bookingDtoList = List.of(bookingDto);
-        when(bookingService.getBookingByItemOwner(userId, String.valueOf(state), from, size)).thenReturn(bookingDtoList);
+        when(bookingService.getBookingByItemOwner(userId, state, from, size)).thenReturn(bookingDtoList);
 
         mockMvc.perform(get("/bookings/owner")
                         .header("X-Sharer-User-Id", userId)
@@ -176,6 +176,7 @@ class BookingControllerTest {
                 .getResponse()
                 .getContentAsString();
 
-        verify(bookingService, times(1)).getBookingByItemOwner(userId, String.valueOf(state), from, size);
+        verify(bookingService, times(1)).getBookingByItemOwner(userId, state, from, size);
+
     }
 }

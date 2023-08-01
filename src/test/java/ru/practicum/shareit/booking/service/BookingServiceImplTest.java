@@ -11,8 +11,7 @@ import ru.practicum.shareit.booking.dto.BookingDto;
 import ru.practicum.shareit.booking.dto.BookingMapper;
 import ru.practicum.shareit.booking.model.Booking;
 import ru.practicum.shareit.booking.model.Status;
-import ru.practicum.shareit.exceptions.ObjectNotFoundException;
-import ru.practicum.shareit.exceptions.ValidationException;
+import ru.practicum.shareit.exception.ObjectNotFoundException;
 import ru.practicum.shareit.item.ItemRepository;
 import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.dto.ItemMapper;
@@ -22,19 +21,20 @@ import ru.practicum.shareit.user.dto.UserDto;
 import ru.practicum.shareit.user.dto.UserMapper;
 import ru.practicum.shareit.user.model.User;
 
+import javax.validation.ValidationException;
 import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hibernate.validator.internal.util.Contracts.assertNotNull;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.*;
-import static org.mockito.Mockito.when;
 
 @ExtendWith(MockitoExtension.class)
 class BookingServiceImplTest {
+
     @Mock
     private BookingRepository bookingRepository;
     @Mock
@@ -80,7 +80,8 @@ class BookingServiceImplTest {
                 .itemId(1L)
                 .build();
 
-        ownerDto = UserMapper.INSTANCE.toUserDto(owner);
+        ownerDto = UserMapper.toUserDto(owner);
+
 
         from = 0;
         size = 20;
@@ -92,10 +93,10 @@ class BookingServiceImplTest {
         long userId = owner.getId();
         long itemId = bookingDto.getItemId();
 
-        Item item = ItemMapper.INSTANCE.toItem(itemDto);
+        Item item = ItemMapper.toItem(itemDto);
         item.setOwner(booker);
 
-        Booking booking = BookingMapper.INSTANCE.toBooking(bookingDto);
+        Booking booking = BookingMapper.toBooking(bookingDto);
         booking.setStatus(Status.WAITING);
         booking.setBooker(booker);
         booking.setItem(item);
@@ -114,14 +115,14 @@ class BookingServiceImplTest {
     }
 
     @Test
-    void addBookingIsOwnerThenReturnThrow() {
+    void addBookingIsOwner_ThenReturnThrow() {
         long userId = owner.getId();
         long itemId = bookingDto.getItemId();
 
-        Item item = ItemMapper.INSTANCE.toItem(itemDto);
+        Item item = ItemMapper.toItem(itemDto);
         item.setOwner(owner);
 
-        Booking booking = BookingMapper.INSTANCE.toBooking(bookingDto);
+        Booking booking = BookingMapper.toBooking(bookingDto);
         booking.setStatus(Status.WAITING);
         booking.setBooker(booker);
         booking.setItem(item);
@@ -141,10 +142,10 @@ class BookingServiceImplTest {
     void approved() {
         long bookingId = bookingDto.getId();
 
-        Item item = ItemMapper.INSTANCE.toItem(itemDto);
+        Item item = ItemMapper.toItem(itemDto);
         item.setOwner(owner);
 
-        Booking booking = BookingMapper.INSTANCE.toBooking(bookingDto);
+        Booking booking = BookingMapper.toBooking(bookingDto);
         booking.setItem(item);
         booking.setStatus(Status.WAITING);
         booking.setBooker(booker);
@@ -161,13 +162,13 @@ class BookingServiceImplTest {
     }
 
     @Test
-    void approvedWhenStatusNotApprovedThenThrowsValidationException() {
+    void approvedWhenStatusNotApproved_ThenThrowsValidationException() {
         long bookingId = bookingDto.getId();
 
-        Item item = ItemMapper.INSTANCE.toItem(itemDto);
+        Item item = ItemMapper.toItem(itemDto);
         item.setOwner(owner);
 
-        Booking booking = BookingMapper.INSTANCE.toBooking(bookingDto);
+        Booking booking = BookingMapper.toBooking(bookingDto);
         booking.setItem(item);
         booking.setStatus(Status.APPROVED);
         booking.setBooker(booker);
@@ -183,23 +184,24 @@ class BookingServiceImplTest {
     }
 
     @Test
-    void getBooking() {
+    void getBooiking() {
         long bookingId = bookingDto.getId();
 
-        Item item = ItemMapper.INSTANCE.toItem(itemDto);
+        Item item = ItemMapper.toItem(itemDto);
         item.setOwner(owner);
 
-        Booking booking = BookingMapper.INSTANCE.toBooking(bookingDto);
+        Booking booking = BookingMapper.toBooking(bookingDto);
         booking.setItem(item);
         booking.setBooker(booker);
 
         when(bookingRepository.findById(bookingId)).thenReturn(Optional.of(booking));
 
-        BookingDto result = bookingService.getBooking(owner.getId(), bookingId);
+        BookingDto result = bookingService.getBooiking(owner.getId(), bookingId);
 
         assertNotNull(result);
         assertEquals(booking.getId(), result.getId());
 
         verify(bookingRepository, atLeast(2)).findById(bookingId);
+
     }
 }

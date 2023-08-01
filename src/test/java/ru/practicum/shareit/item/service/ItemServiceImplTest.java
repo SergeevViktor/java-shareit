@@ -33,9 +33,8 @@ import java.util.Optional;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
 import static org.hamcrest.Matchers.notNullValue;
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
@@ -62,7 +61,7 @@ class ItemServiceImplTest {
     @BeforeEach
     void setUser() {
         owner = User.builder()
-                .id(1L)
+                .id(2L)
                 .name("owner")
                 .email("email2@email.com")
                 .build();
@@ -87,22 +86,41 @@ class ItemServiceImplTest {
                 .itemId(1L)
                 .build();
 
-        ownerDto = UserMapper.INSTANCE.toUserDto(owner);
+        ownerDto = UserMapper.toUserDto(owner);
         comment = Comment.builder()
                 .id(1L)
                 .text("comment1")
                 .author(booker)
-                .item(ItemMapper.INSTANCE.toItem(itemDto))
+                .item(ItemMapper.toItem(itemDto))
                 .build();
+
+    }
+
+    @Test
+    void addItem() {
+        long userId = owner.getId();
+
+        Item item = ItemMapper.toItem(itemDto);
+        when(userService.getUserById(userId)).thenReturn(ownerDto);
+        item.setOwner(UserMapper.toUser(ownerDto));
+        when(itemRepository.save(item)).thenReturn(item);
+
+        ItemDto actualItemDto = itemService.addItem(userId, itemDto);
+
+        assertNotNull(itemDto);
+        assertEquals(actualItemDto.getId(), 1L);
+        assertEquals(actualItemDto.getName(), "item");
+        verify(itemRepository).save(item);
+
     }
 
     @Test
     void updateItem() {
         long userId = owner.getId();
 
-        Item item = ItemMapper.INSTANCE.toItem(itemDto);
+        Item item = ItemMapper.toItem(itemDto);
         when(itemRepository.findById(item.getId())).thenReturn(Optional.of(item));
-        item.setOwner(UserMapper.INSTANCE.toUser(ownerDto));
+        item.setOwner(UserMapper.toUser(ownerDto));
         when(itemRepository.save(item)).thenReturn(item);
 
         ItemDto actualItemDto = itemService.updateItem(userId, itemDto);
@@ -121,21 +139,21 @@ class ItemServiceImplTest {
         long userId = owner.getId();
 
         List<Comment> comments = new ArrayList<>();
-        var item = ItemMapper.INSTANCE.toItem(itemDto);
+        var item = ItemMapper.toItem(itemDto);
         item.setOwner(owner);
         comments.add(comment);
         List<Booking> bookings = new ArrayList<>();
 
-        var booking1 = BookingMapper.INSTANCE.toBooking(booking);
+        var booking1 = BookingMapper.toBooking(booking);
         booking1.setItem(item);
         booking1.setBooker(booker);
         bookings.add(booking1);
 
         when(itemRepository.findById(itemId)).thenReturn(Optional.of(item));
-        when(commentRepository.findCommentsByItemId(itemId)).thenReturn(comments);
-        when(bookingRepository.findBookingByItemIdAndStatus(itemId, Status.APPROVED)).thenReturn(bookings);
+        when(commentRepository.findCommentsByItem_Id(itemId)).thenReturn(comments);
+        when(bookingRepository.findBookingByItem_IdAndStatus(itemId, Status.APPROVED)).thenReturn(bookings);
 
-        ItemDto itemDto = itemService.getItemById(itemId, userId);
+        ItemDto itemDto = itemService.getItem(itemId, userId);
         verify(itemRepository).findById(itemId);
 
         assertNotNull(itemDto);
@@ -148,11 +166,11 @@ class ItemServiceImplTest {
         long itemId = itemDto.getId();
         long userId = booker.getId();
 
-        var item = ItemMapper.INSTANCE.toItem(itemDto);
+        var item = ItemMapper.toItem(itemDto);
         item.setOwner(owner);
 
         List<Booking> bookings = new ArrayList<>();
-        var booking1 = BookingMapper.INSTANCE.toBooking(booking);
+        var booking1 = BookingMapper.toBooking(booking);
         booking1.setItem(item);
         booking1.setBooker(booker);
         booking1.setStatus(Status.APPROVED);
@@ -161,11 +179,11 @@ class ItemServiceImplTest {
         comment.setItem(item);
         comment.setCreated(LocalDateTime.now());
 
-        var commentDto = CommentMapper.INSTANCE.toCommentDto(comment);
+        var commentDto = CommentMapper.tocommentDto(comment);
 
         when(itemRepository.findById(eq(itemId))).thenReturn(Optional.of(item));
         when(userRepository.findById(eq(userId))).thenReturn(Optional.of(booker));
-        when(bookingRepository.findBookingByItemId(eq(itemId))).thenReturn(bookings);
+        when(bookingRepository.findBookingByItem_Id(eq(itemId))).thenReturn(bookings);
         doReturn(comment).when(commentRepository).save(any(Comment.class));
 
         CommentDto commentTest = itemService.addComment(userId, itemId, commentDto);
@@ -173,7 +191,7 @@ class ItemServiceImplTest {
         assertThat(commentTest, notNullValue());
         assertThat(commentTest.getId(), equalTo(comment.getId()));
         verify(userRepository).findById(userId);
-        verify(bookingRepository).findBookingByItemId(itemId);
+        verify(bookingRepository).findBookingByItem_Id(itemId);
         verify(commentRepository).save(any());
         verifyNoMoreInteractions(userRepository, itemRepository, bookingRepository, commentRepository);
 

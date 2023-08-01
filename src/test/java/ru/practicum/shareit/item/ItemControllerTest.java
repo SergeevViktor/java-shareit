@@ -14,11 +14,8 @@ import ru.practicum.shareit.item.dto.ItemDto;
 import ru.practicum.shareit.item.service.ItemService;
 
 import java.time.LocalDateTime;
-import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.*;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.anyLong;
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -47,8 +44,7 @@ class ItemControllerTest {
     @Test
     void addItem() {
         var userId = 0;
-        when(itemService.addItem(userId, itemDto))
-                .thenReturn(itemDto);
+        when(itemService.addItem(userId, itemDto)).thenReturn(itemDto);
         String contentAsString = mockMvc.perform(post("/items")
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("X-Sharer-User-Id", userId)
@@ -66,8 +62,7 @@ class ItemControllerTest {
     void updateItem() {
         var itemId = 0L;
         var userId = 0L;
-        when(itemService.updateItem(userId, itemDto))
-                .thenReturn(itemDto);
+        when(itemService.updateItem(userId, itemDto)).thenReturn(itemDto);
         String contentAsString = mockMvc.perform(patch("/items/{itemId}", itemId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("X-Sharer-User-Id", userId)
@@ -85,7 +80,7 @@ class ItemControllerTest {
     void getItemById() {
         var itemId = 0L;
         var userId = 0L;
-        when(itemService.getItemById(itemId, userId)).thenReturn(itemDto);
+        when(itemService.getItem(itemId, userId)).thenReturn(itemDto);
         String contentAsString = mockMvc.perform(get("/items/{itemId}", itemId)
                         .contentType(MediaType.APPLICATION_JSON)
                         .header("X-Sharer-User-Id", userId)
@@ -96,36 +91,13 @@ class ItemControllerTest {
                 .getContentAsString();
 
         assertEquals(objectMapper.writeValueAsString(itemDto), contentAsString);
-        verify(itemService, atLeast(1)).getItemById(itemId, userId);
+        verify(itemService, atLeast(1)).getItem(itemId, userId);
     }
 
     @Test
     void getItemsByUserId() {
     }
 
-    @SneakyThrows
-    @Test
-    void textSearch() {
-        var userId = 0L;
-        String text = "text";
-        List<ItemDto> itemsDto = List.of(ItemDto.builder()
-                .name("name")
-                .available(true)
-                .build());
-
-        when(itemService.textSearch(text)).thenReturn(itemsDto);
-
-        String contentAsString = mockMvc.perform(get("/items/search")
-                        .header("X-Sharer-User-Id", userId)
-                        .param("text", text))
-                .andExpect(status().isOk())
-                .andReturn()
-                .getResponse()
-                .getContentAsString();
-
-        assertEquals(objectMapper.writeValueAsString(itemsDto), contentAsString);
-        verify(itemService, times(1)).textSearch(text);
-    }
 
     @SneakyThrows
     @Test

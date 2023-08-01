@@ -1,73 +1,127 @@
 package ru.practicum.shareit.user.service;
 
-import lombok.RequiredArgsConstructor;
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
+import ru.practicum.shareit.exception.ObjectNotFoundException;
+import ru.practicum.shareit.user.UserRepository;
 import ru.practicum.shareit.user.dto.UserDto;
+import ru.practicum.shareit.user.dto.UserMapper;
 import ru.practicum.shareit.user.model.User;
 
-import javax.persistence.EntityManager;
-import javax.persistence.TypedQuery;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static org.hamcrest.MatcherAssert.assertThat;
-import static org.hamcrest.Matchers.*;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.hamcrest.Matchers.equalTo;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.*;
 
-@Transactional
-@SpringBootTest(
-        properties = "db.name=test",
-        webEnvironment = SpringBootTest.WebEnvironment.NONE)
-@RequiredArgsConstructor(onConstructor_ = @Autowired)
+
+@ExtendWith(MockitoExtension.class)
 class UserServiceImplTest {
-    private final EntityManager em;
-    private final UserService service;
+    @InjectMocks
+    private UserServiceImpl userService;
+    @Mock
+    private UserRepository userRepository;
+    private User expectedUser;
 
-    @Test
-    void testAddUser() {
-        UserDto userDto = makeUserDto("some@email.com", "UserName");
-        service.addUser(userDto);
-
-        TypedQuery<User> query = em.createQuery("Select u from User u where u.email = :email", User.class);
-        User user = query.setParameter("email", userDto.getEmail()).getSingleResult();
-
-        assertThat(user.getId(), notNullValue());
-        assertThat(user.getName(), equalTo(userDto.getName()));
-        assertThat(user.getEmail(), equalTo(userDto.getEmail()));
+    @BeforeEach
+    void setUser() {
+        expectedUser = User.builder()
+                .id(1L)
+                .name("Olik")
+                .email("Olik@yandex.ru")
+                .build();
     }
 
     @Test
-    void testGetAllUsers() {
-        List<UserDto> sourceUsers = Stream.of(
-                makeUserDto("some@email.com", "UserName"),
-                makeUserDto("some@mail.ru", "UserTest"),
-                makeUserDto("some@yandex.ru", "Vasilii")
-        ).collect(Collectors.toList());
+    void addUser_whenUserNameValid_thenSaveUser() {
+        when(userRepository.save(expectedUser)).thenReturn(expectedUser);
 
-        for (UserDto user : sourceUsers) {
-            service.addUser(user);
-        }
+        UserDto actualUser = userService.addUser(UserMapper.toUserDto(expectedUser));
 
-        List<UserDto> targetUsers = service.getAllUsers();
-
-        assertThat(targetUsers, hasSize(sourceUsers.size()));
-        for (UserDto sourceUser : sourceUsers) {
-            assertThat(targetUsers, hasItem(allOf(
-                    hasProperty("id", notNullValue()),
-                    hasProperty("name", equalTo(sourceUser.getName())),
-                    hasProperty("email", equalTo(sourceUser.getEmail()))
-            )));
-        }
+        assertEquals(UserMapper.toUser(actualUser), expectedUser);
+        verify(userRepository).save(expectedUser);
     }
 
-    private UserDto makeUserDto(String email, String name) {
+    @Test
+    void updateUserWhenUserFound() {
+        when(userRepository.save(any(User.class))).thenReturn(expectedUser);
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(expectedUser));
 
-        return UserDto.builder()
-                .name(name)
-                .email(email).build();
+        var returnedUser = userService.updateUser(UserMapper.toUserDto(expectedUser));
+
+        assertThat(UserMapper.toUser(returnedUser), equalTo(expectedUser));
+        verify(userRepository).save(expectedUser);
+        verify(userRepository).findById(expectedUser.getId());
     }
+
+    @Test
+    void update_whenAddUserWithIncorrectId_thenThrowObjectNotFoundException() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+        ObjectNotFoundException exception = assertThrows(ObjectNotFoundException.class, () ->
+                userService.getUserById(expectedUser.getId()));
+
+        assertThat(exception.getMessage(), equalTo("Пользователя не существует!"));
+        verify(userRepository, never()).save(expectedUser);
+        verify(userRepository).findById(expectedUser.getId());
+    }
+
+    @Test
+    void getAllUsers() {
+        List<User> expectedUsers = List.of(expectedUser);
+        List<UserDto> expectedUserDto = expectedUsers.stream()
+                .map(UserMapper::toUserDto)
+                .collect(Collectors.toList());
+
+        when(userRepository.findAll()).thenReturn(expectedUsers);
+
+        List<UserDto> actualUsersDto = userService.getAllUsers();
+
+        assertEquals(actualUsersDto.size(), 1);
+        assertEquals(actualUsersDto, expectedUserDto);
+    }
+
+    @Test
+    void deleteWhenUserFound_ThenDeletenUser() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.of(expectedUser));
+        userService.deleteUser(expectedUser.getId());
+        verify(userRepository, times(1)).deleteById(expectedUser.getId());
+    }
+
+    @Test
+    void deleteWhenUserNotFound_thenThrowObjectNotFoundException() {
+        when(userRepository.findById(anyLong())).thenReturn(Optional.empty());
+
+        ObjectNotFoundException exception = assertThrows(ObjectNotFoundException.class, () ->
+                userService.deleteUser(expectedUser.getId()));
+
+        assertThat(exception.getMessage(), equalTo("Пользователя не существует!"));
+        verify(userRepository, never()).deleteById(expectedUser.getId());
+    }
+
+    @Test
+    void getUserByIdWhenUserFound_ThenReturnUser() {
+        when(userRepository.findById(expectedUser.getId())).thenReturn(Optional.of(expectedUser));
+        UserDto actualUser = userService.getUserById(expectedUser.getId());
+        assertEquals(UserMapper.toUser(actualUser), expectedUser);
+    }
+
+    @Test
+    void getUserByIdWhenUserFound_ThenObjectNotFoundException() {
+        when(userRepository.findById(expectedUser.getId())).thenReturn(Optional.empty());
+
+        ObjectNotFoundException exception = assertThrows(ObjectNotFoundException.class, () ->
+                userService.getUserById(expectedUser.getId()));
+    }
+
+
 }
